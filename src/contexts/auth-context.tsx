@@ -61,18 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    // Protect authenticated routes (all logged-in users can access dashboard)
-    useEffect(() => {
-        if (!isLoading && pathname?.startsWith('/dashboard')) {
-            if (!user) {
-                router.push('/auth/google');
-            }
-            // Admin panel routes require admin access
-            if (user && !isAdmin && pathname?.startsWith('/dashboard/admin')) {
-                router.push('/auth/unauthorized');
-            }
-        }
-    }, [user, isLoading, pathname, router, isAdmin]);
+    // Note: Dashboard protection is handled by middleware
+    // This context only manages user state for UI purposes
 
     // Google OAuth sign in
     const signInWithGoogle = useCallback(() => {
