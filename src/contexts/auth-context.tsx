@@ -4,10 +4,10 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter, usePathname } from 'next/navigation';
 
 // Admin email - only this email can access admin dashboard
-const ADMIN_EMAIL = 'mdmokammelmorshed@gmail.com';
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'mdmokammelmorshed@gmail.com';
 
 // Google OAuth configuration
-const GOOGLE_CLIENT_ID = '146758920582-eq6sv1jna5nngrscj433haefjlfm8cib.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 const GOOGLE_REDIRECT_URI = typeof window !== 'undefined' 
     ? `${window.location.origin}/auth/google/callback`
     : 'http://localhost:3000/auth/google/callback';
@@ -65,11 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!isLoading && pathname?.startsWith('/dashboard')) {
             if (!user) {
-                router.push('/auth/login');
+                router.push('/auth/google');
             }
             // Admin panel routes require admin access
             if (user && !isAdmin && pathname?.startsWith('/dashboard/admin')) {
-                router.push('/dashboard');
+                router.push('/auth/unauthorized');
             }
         }
     }, [user, isLoading, pathname, router, isAdmin]);
