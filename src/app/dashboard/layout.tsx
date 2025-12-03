@@ -47,28 +47,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 const res = await fetch('/api/auth/session');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.session && data.session.isAdmin) {
+                    if (data.session) {
                         setSession(data.session);
-                    } else {
-                        router.push('/udyomx-admin');
                     }
-                } else {
-                    router.push('/udyomx-admin');
                 }
-            } catch {
-                // For now, allow access in development
-                setSession({
-                    id: 'dev',
-                    email: 'mdmokammelmorshed@gmail.com',
-                    name: 'Admin',
-                    picture: '',
-                    isAdmin: true,
-                });
+            } catch (err) {
+                console.error('Session check failed:', err);
             }
             setIsLoading(false);
         };
         checkSession();
-    }, [router]);
+    }, []);
     
     const handleSignOut = async () => {
         await fetch('/api/auth/signout', { method: 'POST' });

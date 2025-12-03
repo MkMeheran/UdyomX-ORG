@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
-    const cookieStore = cookies();
-    const adminSession = cookieStore.get('admin-session');
+    const adminSession = request.cookies.get('admin-session');
     
     if (adminSession) {
         try {
