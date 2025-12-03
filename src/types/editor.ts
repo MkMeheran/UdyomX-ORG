@@ -11,6 +11,7 @@ export interface EditorMediaItem {
     altText: string;
     caption?: string;
     source: 'url' | 'upload' | 'drive';
+    storagePath?: string; // Supabase storage path for uploaded files
     width?: number;
     height?: number;
     duration?: string; // For videos
@@ -25,6 +26,7 @@ export interface EditorDownloadItem {
     fileSize?: string;
     fileType?: string;
     source: 'url' | 'upload' | 'drive';
+    storagePath?: string; // Supabase storage path for uploaded files
     orderIndex: number;
 }
 

@@ -1,47 +1,80 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { Plus, Trash2, GripVertical, Image as ImageIcon, Video, Link as LinkIcon, Upload, HardDrive, X } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Plus, Trash2, GripVertical, Image as ImageIcon, Video, Upload, X, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generateId } from '@/lib/slug-utils';
+import { uploadGalleryImage, formatFileSize, ALLOWED_TYPES, FILE_LIMITS } from '@/lib/supabase/storage';
 import type { EditorMediaItem } from '@/types/editor';
 
 interface GalleryEditorProps {
     items: EditorMediaItem[];
     onChange: (items: EditorMediaItem[]) => void;
     maxItems?: number;
+    folder?: string; // Folder name for organizing uploads (e.g., post slug)
 }
 
-export function GalleryEditor({ items, onChange, maxItems = 20 }: GalleryEditorProps) {
+export function GalleryEditor({ items, onChange, maxItems = 20, folder }: GalleryEditorProps) {
     const [showAddModal, setShowAddModal] = useState(false);
-    const [addMode, setAddMode] = useState<'url' | 'upload' | 'drive'>('url');
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState<string>('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    
     const [newItem, setNewItem] = useState<Partial<EditorMediaItem>>({
         type: 'image',
         url: '',
         altText: '',
-        source: 'url'
+        source: 'upload'
     });
     
-    const addItem = useCallback(() => {
-        if (!newItem.url || !newItem.altText) return;
+    // Handle file upload to Supabase
+    const handleFileUpload = useCallback(async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
         
-        const item: EditorMediaItem = {
-            id: generateId(),
-            type: newItem.type || 'image',
-            url: newItem.url,
-            altText: newItem.altText,
-            caption: newItem.caption,
-            source: addMode,
-            thumbnailUrl: newItem.type === 'video' ? newItem.thumbnailUrl : undefined,
-            orderIndex: items.length
-        };
+        setUploading(true);
+        setUploadError(null);
         
-        onChange([...items, item]);
-        setNewItem({ type: 'image', url: '', altText: '', source: 'url' });
+        const newItems: EditorMediaItem[] = [];
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            setUploadProgress(`Uploading ${i + 1}/${files.length}: ${file.name}`);
+            
+            const result = await uploadGalleryImage(file, folder);
+            
+            if (result.success && result.url) {
+                const item: EditorMediaItem = {
+                    id: generateId(),
+                    type: result.fileType === 'video' ? 'video' : 'image',
+                    url: result.url,
+                    altText: file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' '),
+                    source: 'upload',
+                    storagePath: result.path,
+                    orderIndex: items.length + newItems.length
+                };
+                newItems.push(item);
+            } else {
+                setUploadError(`Failed to upload ${file.name}: ${result.error}`);
+            }
+        }
+        
+        if (newItems.length > 0) {
+            onChange([...items, ...newItems]);
+        }
+        
+        setUploading(false);
+        setUploadProgress('');
         setShowAddModal(false);
-    }, [newItem, items, onChange, addMode]);
+        
+        // Reset file input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    }, [items, onChange, folder]);
     
     const removeItem = useCallback((id: string) => {
+        // TODO: Also delete from Supabase storage if needed
         onChange(items.filter(item => item.id !== id).map((item, idx) => ({
             ...item,
             orderIndex: idx
@@ -54,18 +87,24 @@ export function GalleryEditor({ items, onChange, maxItems = 20 }: GalleryEditorP
         ));
     }, [items, onChange]);
     
-    const moveItem = useCallback((fromIndex: number, toIndex: number) => {
-        const newItems = [...items];
-        const [movedItem] = newItems.splice(fromIndex, 1);
-        newItems.splice(toIndex, 0, movedItem);
-        onChange(newItems.map((item, idx) => ({ ...item, orderIndex: idx })));
-    }, [items, onChange]);
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }, []);
+    
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleFileUpload(e.dataTransfer.files);
+    }, [handleFileUpload]);
     
     return (
         <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-black text-[#2C2416]">Gallery ({items.length}/{maxItems})</h3>
+                <h3 className="text-lg font-black text-[#2C2416]">
+                    Gallery ({items.length}/{maxItems})
+                </h3>
                 {items.length < maxItems && (
                     <button
                         type="button"
@@ -111,29 +150,25 @@ export function GalleryEditor({ items, onChange, maxItems = 20 }: GalleryEditorP
                             {/* Media Preview */}
                             <div className="aspect-video bg-[#F5F1E8] flex items-center justify-center">
                                 {item.type === 'video' ? (
-                                    item.thumbnailUrl ? (
-                                        <img 
-                                            src={item.thumbnailUrl} 
-                                            alt={item.altText}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <Video className="w-12 h-12 text-[#2C2416]/50" />
-                                    )
+                                    <video 
+                                        src={item.url}
+                                        className="w-full h-full object-cover"
+                                        muted
+                                    />
                                 ) : (
                                     <img 
                                         src={item.url} 
                                         alt={item.altText}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
-                                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23F5F1E8" width="100" height="100"/><text x="50%" y="50%" font-size="12" text-anchor="middle" fill="%232C2416">No Image</text></svg>';
+                                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23F5F1E8" width="100" height="100"/><text x="50%" y="50%" font-size="10" text-anchor="middle" fill="%232C2416">Error</text></svg>';
                                         }}
                                     />
                                 )}
                             </div>
                             
                             {/* Type Badge */}
-                            <div className="absolute bottom-2 left-2">
+                            <div className="absolute bottom-12 left-2">
                                 <span className="px-2 py-0.5 text-xs font-bold bg-[#F5C542] border-2 border-[#2C2416]">
                                     {item.type.toUpperCase()}
                                 </span>
@@ -153,242 +188,111 @@ export function GalleryEditor({ items, onChange, maxItems = 20 }: GalleryEditorP
                     ))}
                 </div>
             ) : (
-                <div className="p-8 bg-[#F5F1E8] border-4 border-dashed border-[#2C2416]/30 text-center">
+                <div 
+                    className="p-8 bg-[#F5F1E8] border-4 border-dashed border-[#2C2416]/30 text-center cursor-pointer hover:border-[#2C2416]/50 transition-all"
+                    onClick={() => setShowAddModal(true)}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                >
                     <ImageIcon className="w-12 h-12 mx-auto text-[#2C2416]/30 mb-2" />
                     <p className="text-[#2C2416]/50 font-medium">No media items yet</p>
-                    <p className="text-sm text-[#2C2416]/40">Click "Add Media" to add images or videos</p>
+                    <p className="text-sm text-[#2C2416]/40">Click or drag files to upload</p>
                 </div>
             )}
             
-            {/* Add Modal */}
+            {/* Upload Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="bg-[#F5F1E8] border-4 border-[#2C2416] shadow-[8px_8px_0_rgba(44,36,22,0.4)] p-6 w-full max-w-lg mx-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-xl font-black text-[#2C2416]">Add Media</h4>
+                            <h4 className="text-xl font-black text-[#2C2416]">Upload Media</h4>
                             <button
                                 type="button"
-                                onClick={() => setShowAddModal(false)}
+                                onClick={() => {
+                                    setShowAddModal(false);
+                                    setUploadError(null);
+                                }}
                                 className="p-1 hover:bg-[#2C2416]/10"
+                                disabled={uploading}
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
                         
-                        {/* Source Tabs */}
-                        <div className="flex gap-2 mb-4">
-                            {[
-                                { key: 'url', icon: LinkIcon, label: 'URL' },
-                                { key: 'upload', icon: Upload, label: 'Upload' },
-                                { key: 'drive', icon: HardDrive, label: 'Drive' }
-                            ].map(({ key, icon: Icon, label }) => (
-                                <button
-                                    key={key}
-                                    type="button"
-                                    onClick={() => setAddMode(key as 'url' | 'upload' | 'drive')}
-                                    className={cn(
-                                        'flex items-center gap-2 px-4 py-2 font-bold text-sm border-2 border-[#2C2416] transition-all',
-                                        addMode === key 
-                                            ? 'bg-[#2C2416] text-white' 
-                                            : 'bg-white hover:bg-[#F5C542]'
-                                    )}
-                                >
-                                    <Icon className="w-4 h-4" />
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-                        
-                        {/* Type Selection */}
-                        <div className="mb-4">
-                            <label className="block font-bold text-[#2C2416] mb-2">Type</label>
-                            <div className="flex gap-2">
-                                {['image', 'video'].map((type) => (
-                                    <button
-                                        key={type}
-                                        type="button"
-                                        onClick={() => setNewItem({ ...newItem, type: type as 'image' | 'video' })}
-                                        className={cn(
-                                            'flex items-center gap-2 px-4 py-2 font-bold text-sm border-2 border-[#2C2416] transition-all',
-                                            newItem.type === type
-                                                ? 'bg-[#F5C542]'
-                                                : 'bg-white hover:bg-[#F5C542]/50'
-                                        )}
-                                    >
-                                        {type === 'image' ? <ImageIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        
-                        {/* URL Input */}
-                        {addMode === 'url' && (
-                            <div className="mb-4">
-                                <label className="block font-bold text-[#2C2416] mb-2">
-                                    {newItem.type === 'video' ? 'Video URL' : 'Image URL'}
-                                </label>
-                                <input
-                                    type="url"
-                                    value={newItem.url || ''}
-                                    onChange={(e) => setNewItem({ ...newItem, url: e.target.value })}
-                                    placeholder="https://..."
-                                    className="w-full px-4 py-3 border-4 border-[#2C2416] bg-white font-medium"
-                                />
+                        {/* Error Message */}
+                        {uploadError && (
+                            <div className="mb-4 p-3 bg-red-100 border-2 border-red-500 text-red-700 flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                <span className="text-sm font-medium">{uploadError}</span>
                             </div>
                         )}
                         
-                        {/* File Upload */}
-                        {addMode === 'upload' && (
-                            <div className="mb-4">
-                                <label className="block font-bold text-[#2C2416] mb-2">Upload File</label>
-                                <div 
-                                    className="relative p-8 border-4 border-dashed border-[#2C2416]/50 bg-white text-center cursor-pointer hover:border-[#2C2416]"
-                                    onClick={() => {
-                                        const input = document.getElementById('gallery-file-input') as HTMLInputElement;
-                                        input?.click();
-                                    }}
-                                >
-                                    <Upload className="w-8 h-8 mx-auto text-[#2C2416]/50 mb-2" />
-                                    <p className="font-medium text-[#2C2416]/70">Click to select file</p>
-                                    <p className="text-sm text-[#2C2416]/50">Max 10MB • JPG, PNG, GIF, MP4, WebM</p>
-                                </div>
-                                <input
-                                    id="gallery-file-input"
-                                    type="file"
-                                    accept="image/*,video/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            // Convert to data URL for preview
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                const url = event.target?.result as string;
-                                                setNewItem({ ...newItem, url });
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-                                        // Reset the input
-                                        e.target.value = '';
-                                    }}
-                                />
-                                {newItem.url && newItem.url.startsWith('data:') && (
-                                    <div className="mt-2 p-2 bg-green-100 border-2 border-green-500 text-green-800 text-sm font-medium">
-                                        ✓ File selected - preview will show after adding
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        
-                        {/* Drive */}
-                        {addMode === 'drive' && (
-                            <div className="mb-4">
-                                <label className="block font-bold text-[#2C2416] mb-2">Google Drive Image/Video</label>
-                                
-                                {/* Instructions */}
-                                <div className="p-3 bg-blue-50 border-2 border-blue-300 mb-3 text-sm">
-                                    <p className="font-bold text-blue-800 mb-1">📋 How to use:</p>
-                                    <ol className="list-decimal list-inside text-blue-700 space-y-1">
-                                        <li>Click "Open Google Drive" button below</li>
-                                        <li>Right-click your image/video → "Get link"</li>
-                                        <li>Set sharing to "Anyone with the link"</li>
-                                        <li>Copy the link and paste it below</li>
-                                    </ol>
-                                </div>
-                                
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        window.open('https://drive.google.com/drive/my-drive', '_blank', 'width=1000,height=700');
-                                    }}
-                                    className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-white border-4 border-[#2C2416] font-bold hover:bg-[#F5C542] hover:shadow-[4px_4px_0_rgba(44,36,22,0.3)] transition-all mb-3"
-                                >
-                                    <HardDrive className="w-5 h-5" />
-                                    Open Google Drive
-                                </button>
-                                
-                                <div>
-                                    <label className="block font-bold text-[#2C2416] mb-2">Paste Drive Link</label>
-                                    <input
-                                        type="url"
-                                        value={newItem.url || ''}
-                                        onChange={(e) => {
-                                            let url = e.target.value;
-                                            // Auto-convert Google Drive sharing link to direct view link
-                                            if (url.includes('drive.google.com')) {
-                                                const fileIdMatch = url.match(/\/d\/([^\/\?]+)/);
-                                                if (fileIdMatch) {
-                                                    url = `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
-                                                }
-                                            }
-                                            setNewItem({ ...newItem, url });
-                                        }}
-                                        placeholder="https://drive.google.com/file/d/..."
-                                        className="w-full px-4 py-3 border-4 border-[#2C2416] bg-white font-medium"
-                                    />
-                                    {newItem.url && newItem.url.includes('drive.google.com') && (
-                                        <p className="mt-1 text-xs text-green-600 font-medium">✓ Link converted to direct view URL</p>
-                                    )}
-                                </div>
-                                <p className="mt-2 text-sm text-[#2C2416]/50">Make sure the file is shared as "Anyone with the link can view"</p>
-                            </div>
-                        )}
-                        
-                        {/* Video Thumbnail */}
-                        {newItem.type === 'video' && (
-                            <div className="mb-4">
-                                <label className="block font-bold text-[#2C2416] mb-2">Thumbnail URL (optional)</label>
-                                <input
-                                    type="url"
-                                    value={newItem.thumbnailUrl || ''}
-                                    onChange={(e) => setNewItem({ ...newItem, thumbnailUrl: e.target.value })}
-                                    placeholder="https://..."
-                                    className="w-full px-4 py-3 border-4 border-[#2C2416] bg-white font-medium"
-                                />
-                            </div>
-                        )}
-                        
-                        {/* Alt Text */}
-                        <div className="mb-4">
-                            <label className="block font-bold text-[#2C2416] mb-2">Alt Text <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
-                                value={newItem.altText || ''}
-                                onChange={(e) => setNewItem({ ...newItem, altText: e.target.value })}
-                                placeholder="Describe the media..."
-                                className="w-full px-4 py-3 border-4 border-[#2C2416] bg-white font-medium"
-                            />
+                        {/* Upload Area */}
+                        <div 
+                            className={cn(
+                                "relative p-8 border-4 border-dashed bg-white text-center transition-all",
+                                uploading 
+                                    ? "border-[#F5C542] bg-[#F5C542]/10" 
+                                    : "border-[#2C2416]/50 hover:border-[#2C2416] cursor-pointer"
+                            )}
+                            onClick={() => !uploading && fileInputRef.current?.click()}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                        >
+                            {uploading ? (
+                                <>
+                                    <Loader2 className="w-10 h-10 mx-auto text-[#F5C542] animate-spin mb-2" />
+                                    <p className="font-bold text-[#2C2416]">{uploadProgress || 'Uploading...'}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <Upload className="w-10 h-10 mx-auto text-[#2C2416]/50 mb-2" />
+                                    <p className="font-bold text-[#2C2416]">Click or drag files to upload</p>
+                                    <p className="text-sm text-[#2C2416]/60 mt-1">
+                                        Images: JPG, PNG, GIF, WebP (max {formatFileSize(FILE_LIMITS.IMAGE)})
+                                    </p>
+                                    <p className="text-sm text-[#2C2416]/60">
+                                        Videos: MP4, WebM (max {formatFileSize(FILE_LIMITS.VIDEO)})
+                                    </p>
+                                    <p className="text-xs text-[#2C2416]/40 mt-2">
+                                        You can select multiple files
+                                    </p>
+                                </>
+                            )}
                         </div>
                         
-                        {/* Caption */}
-                        <div className="mb-6">
-                            <label className="block font-bold text-[#2C2416] mb-2">Caption (optional)</label>
-                            <input
-                                type="text"
-                                value={newItem.caption || ''}
-                                onChange={(e) => setNewItem({ ...newItem, caption: e.target.value })}
-                                placeholder="Optional caption..."
-                                className="w-full px-4 py-3 border-4 border-[#2C2416] bg-white font-medium"
-                            />
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept={[...ALLOWED_TYPES.IMAGE, ...ALLOWED_TYPES.VIDEO].join(',')}
+                            multiple
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e.target.files)}
+                            disabled={uploading}
+                        />
+                        
+                        {/* Info */}
+                        <div className="mt-4 p-3 bg-blue-50 border-2 border-blue-300 text-sm">
+                            <p className="font-bold text-blue-800 mb-1">💡 Tips:</p>
+                            <ul className="text-blue-700 space-y-1 list-disc list-inside">
+                                <li>Files are uploaded to Supabase Storage</li>
+                                <li>Images are publicly accessible via URL</li>
+                                <li>Alt text is auto-generated from filename</li>
+                            </ul>
                         </div>
                         
-                        {/* Actions */}
-                        <div className="flex gap-3 justify-end">
+                        {/* Close Button */}
+                        <div className="mt-4 flex justify-end">
                             <button
                                 type="button"
-                                onClick={() => setShowAddModal(false)}
+                                onClick={() => {
+                                    setShowAddModal(false);
+                                    setUploadError(null);
+                                }}
                                 className="px-6 py-2 font-bold border-4 border-[#2C2416] bg-white hover:bg-[#F5F1E8] transition-all"
+                                disabled={uploading}
                             >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={addItem}
-                                disabled={!newItem.url || !newItem.altText}
-                                className="px-6 py-2 font-bold border-4 border-[#2C2416] bg-[#F5C542] hover:shadow-[4px_4px_0_rgba(44,36,22,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Add Media
+                                Close
                             </button>
                         </div>
                     </div>
