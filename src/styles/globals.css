@@ -1,0 +1,234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Earth & Ink Theme Variables */
+    --background: 35 19% 95%;     /* Cream #F5F1E8 */
+    --foreground: 216 52% 16%;    /* Ink Navy #0F2A42 */
+    --card: 40 24% 99%;           /* Warm White #FFFCF8 */
+    --card-foreground: 216 52% 16%;
+    --popover: 40 24% 99%;
+    --popover-foreground: 216 52% 16%;
+    --primary: 172 46% 46%;       /* Teal #3CAEA3 */
+    --primary-foreground: 40 24% 99%;
+    --secondary: 43 87% 40%;      /* Ochre #CA8A04 */
+    --secondary-foreground: 40 24% 99%;
+    --muted: 30 9% 58%;           /* Stone warm */
+    --muted-foreground: 30 8% 37%; /* Tertiary text */
+    --accent: 10 82% 57%;         /* Red-Orange #ED553B */
+    --accent-foreground: 40 24% 99%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 27 11% 89%;         /* Warm stone */
+    --input: 27 11% 89%;
+    --ring: 172 46% 46%;          /* Teal */
+    --radius: 0.75rem;            /* 12px */
+    
+    /* Font Variables */
+    --font-sans: var(--font-inter);
+    --font-serif: var(--font-merriweather);
+    --font-mono: var(--font-jetbrains);
+  }
+
+  .dark {
+    --background: 40 19% 13%;     /* Dark brown */
+    --foreground: 40 24% 99%;
+    --card: 40 15% 16%;
+    --card-foreground: 40 24% 99%;
+    --popover: 40 15% 16%;
+    --popover-foreground: 40 24% 99%;
+    --primary: 172 46% 46%;
+    --primary-foreground: 40 24% 99%;
+    --secondary: 43 87% 40%;
+    --secondary-foreground: 40 24% 99%;
+    --muted: 30 9% 38%;
+    --muted-foreground: 30 9% 58%;
+    --accent: 10 82% 57%;
+    --accent-foreground: 40 24% 99%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 30 9% 28%;
+    --input: 30 9% 28%;
+    --ring: 172 46% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+  code, pre {
+    @apply font-mono;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Custom Shadows */
+  .shadow-offset-sm {
+    box-shadow: 3px 3px 0 0 rgba(43, 36, 22, 0.1);
+  }
+  
+  .shadow-offset {
+    box-shadow: 5px 5px 0 0 rgba(43, 36, 22, 0.15);
+  }
+  
+  .shadow-offset-lg {
+    box-shadow: 8px 8px 0 0 rgba(43, 36, 22, 0.2);
+  }
+  
+  .shadow-glow-teal {
+    box-shadow: 0 0 20px rgba(60, 174, 163, 0.3);
+  }
+  
+  .shadow-glow-orange {
+    box-shadow: 0 0 20px rgba(237, 85, 59, 0.3);
+  }
+  
+  /* Gradient Backgrounds */
+  .gradient-warm {
+    background: linear-gradient(135deg, #FFFCF8 0%, #F5F1E8 100%);
+  }
+  
+  .gradient-teal {
+    background: linear-gradient(135deg, #3CAEA3 0%, #2C9388 100%);
+  }
+  
+  .gradient-orange {
+    background: linear-gradient(135deg, #ED553B 0%, #D43F2A 100%);
+  }
+  
+  .gradient-dark {
+    background: linear-gradient(135deg, #2B2416 0%, #1A150D 100%);
+  }
+  
+  .gradient-mesh {
+    background: 
+      radial-gradient(at 40% 20%, rgba(60, 174, 163, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(237, 85, 59, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(202, 138, 4, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, rgba(60, 174, 163, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(237, 85, 59, 0.1) 0px, transparent 50%);
+  }
+  
+  /* Glass Morphism */
+  .glass {
+    background: rgba(255, 252, 248, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .glass-dark {
+    background: rgba(43, 36, 22, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  /* Bento Grid Patterns */
+  .bento-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(43, 36, 22, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(43, 36, 22, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  /* Noise Texture for Hero Sections */
+  .noise-texture {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+  
+  /* Animated Gradients */
+  .animated-gradient {
+    background: linear-gradient(-45deg, #3CAEA3, #ED553B, #CA8A04, #2C5F5D);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+  
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /* Fade in animation */
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Hover Effects */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(43, 36, 22, 0.15);
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 30px rgba(60, 174, 163, 0.4);
+  }
+  
+  /* Text Gradients */
+  .text-gradient-teal {
+    background: linear-gradient(135deg, #3CAEA3 0%, #2C5F5D 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #ED553B 0%, #CA8A04 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Decorative Elements */
+  .corner-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border-top: 3px solid currentColor;
+    border-left: 3px solid currentColor;
+  }
+  
+  .corner-accent::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    border-bottom: 3px solid currentColor;
+    border-right: 3px solid currentColor;
+  }
+}
+
