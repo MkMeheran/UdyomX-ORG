@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const ADMIN_EMAIL = 'mdmokammelmorshed@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'mdmokammelmorshed@gmail.com';
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -20,8 +20,8 @@ export async function middleware(request: NextRequest) {
         try {
             const session = JSON.parse(adminSession.value);
             if (session.email !== ADMIN_EMAIL) {
-                // Not admin - show not found
-                return NextResponse.redirect(new URL('/not-found', request.url));
+                // Not admin - redirect to unauthorized
+                return NextResponse.redirect(new URL('/auth/unauthorized', request.url));
             }
         } catch {
             return NextResponse.redirect(new URL('/auth/google?admin=true', request.url));
