@@ -61,9 +61,9 @@ export async function GET(request: NextRequest) {
         // Check if user is admin
         const isAdmin = userInfo.email === ADMIN_EMAIL;
         
-        // If trying to access admin but not admin email - show not found
+        // If trying to access admin but not admin email - show unauthorized
         if (state === 'admin' && !isAdmin) {
-            return NextResponse.redirect(`${baseUrl}/not-found`);
+            return NextResponse.redirect(`${baseUrl}/auth/unauthorized`);
         }
 
         // Create session object
