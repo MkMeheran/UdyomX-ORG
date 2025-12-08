@@ -34,7 +34,7 @@ export default function EditServicePage() {
                     category: service.category || '',
                     thumbnail: service.thumbnail || '',
                     coverImage: (service as any).coverImage || service.thumbnail || '',
-                    publishDate: (service as any).publishDate || new Date().toISOString(),
+                    publishDate: ((service as any).publishDate || new Date().toISOString()).split('T')[0],
                     status: service.status || 'draft',
                     theme: 'earth-ink',
                     showGallery: (service as any).showGallery ?? false,
@@ -51,10 +51,10 @@ export default function EditServicePage() {
                         title: p.title || '',
                         price: p.price || 0,
                         discountPrice: p.discountPrice,
-                        features: p.features || [],
-                        deliveryTime: p.deliveryTime || '',
-                        revisions: p.revisions || 0,
-                        isPopular: p.isPopular || false
+                        features: Array.isArray(p.features) ? p.features : [],
+                        deliveryTime: p.deliveryTime || p.delivery_time || '',
+                        revisions: p.revisions || 1,
+                        isPopular: p.isPopular || p.is_popular || false
                     })),
                     problems: ((service as any).problems || []).map((p: any) => ({
                         id: p.id || Math.random().toString(36).slice(2),
@@ -81,10 +81,12 @@ export default function EditServicePage() {
                     })),
                     downloads: ((service as any).downloads || []).map((d: any) => ({
                         id: d.id || Math.random().toString(36).slice(2),
-                        fileUrl: d.fileUrl || '',
-                        label: d.label || '',
+                        title: d.label || '',
+                        url: d.fileUrl || '',
                         fileSize: d.fileSize || '',
-                        fileType: d.fileType || ''
+                        fileType: d.fileType || '',
+                        source: 'upload' as const,
+                        orderIndex: d.orderIndex || 0
                     })),
                     faqs: ((service as any).faqs || []).map((f: any) => ({
                         id: f.id || Math.random().toString(36).slice(2),

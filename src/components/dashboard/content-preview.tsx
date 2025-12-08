@@ -235,10 +235,33 @@ interface ServiceCardPreviewProps {
 export function ServiceCardPreview({ data }: ServiceCardPreviewProps) {
     const thumbnail = data.thumbnail || data.coverImage;
     
+    // Determine category badge color based on category
+    const getCategoryColor = (category?: string) => {
+        switch (category?.toLowerCase()) {
+            case 'development':
+                return 'bg-[#2196F3] text-white';
+            case 'design':
+                return 'bg-[#9C27B0] text-white';
+            case 'consulting':
+                return 'bg-[#FF9800] text-white';
+            case 'marketing':
+                return 'bg-[#4CAF50] text-white';
+            default:
+                return 'bg-[#F5C542] text-[#2C2416]';
+        }
+    };
+    
     return (
-        <div className="bg-white border-4 border-[#2C2416] shadow-[6px_6px_0_rgba(44,36,22,0.3)] overflow-hidden max-w-sm">
-            {/* Thumbnail */}
-            <div className="aspect-video bg-[#F5F1E8] relative overflow-hidden">
+        <div className="
+            bg-[#F5F1E8] border-[4px] border-[#2C2416]
+            shadow-[6px_6px_0_0_rgba(44,36,22,0.5)]
+            hover:-translate-x-1 hover:-translate-y-1
+            hover:shadow-[10px_10px_0_0_rgba(44,36,22,0.5)]
+            transition-all duration-150 ease-out
+            overflow-hidden max-w-sm flex flex-col
+        ">
+            {/* Thumbnail - 1.91:1 ratio */}
+            <div className="relative aspect-[1.91/1] overflow-hidden border-b-[4px] border-[#2C2416]">
                 {thumbnail ? (
                     <img 
                         src={thumbnail} 
@@ -246,60 +269,50 @@ export function ServiceCardPreview({ data }: ServiceCardPreviewProps) {
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-[#2C2416]/30">
-                        <Tag className="w-12 h-12" />
+                    <div className="w-full h-full bg-gradient-to-br from-[#E0E0E0] to-[#D1D1D1] flex items-center justify-center">
+                        <span className="text-6xl">🔧</span>
                     </div>
                 )}
                 
-                {/* Category Badge */}
+                {/* Category Badge on Image */}
                 {data.category && (
                     <div className="absolute top-3 left-3">
-                        <span className="px-2 py-1 bg-[#F5C542] border-2 border-[#2C2416] text-xs font-bold">
+                        <span className={cn(
+                            'inline-block px-3 py-1.5',
+                            getCategoryColor(data.category),
+                            'border-[3px] border-[#2C2416]',
+                            'shadow-[3px_3px_0_0_#2C2416]',
+                            'text-[11px] font-black uppercase tracking-wider'
+                        )}>
                             {data.category}
                         </span>
                     </div>
                 )}
             </div>
             
-            {/* Content */}
-            <div className="p-4 space-y-3">
-                {/* Title */}
-                <h3 className="font-black text-lg text-[#2C2416] line-clamp-2">
+            {/* Content - Title & Description */}
+            <div className="p-5 flex-1 flex flex-col">
+                <h3 className="text-[18px] md:text-[20px] font-black text-[#2C2416] leading-[1.25] line-clamp-2 mb-3">
                     {data.title || 'Untitled Service'}
                 </h3>
+                <p className="text-[14px] text-[#5A5247] font-medium line-clamp-3 leading-[1.6] flex-1">
+                    {data.hookLine || data.description || 'No description provided...'}
+                </p>
+            </div>
+            
+            {/* Footer - Delivery Time & Arrow Button */}
+            <div className="px-5 pb-5 flex items-center justify-between gap-3">
+                <span className="text-[12px] text-[#7A7568] font-semibold">
+                    ⏱ {data.packages?.[0]?.deliveryTime || 'Contact us'}
+                </span>
                 
-                {/* Hook Line */}
-                {data.hookLine && (
-                    <p className="text-sm text-[#2C2416]/70 line-clamp-2">
-                        {data.hookLine}
-                    </p>
-                )}
-                
-                {/* Features Preview */}
-                {data.features && data.features.length > 0 && (
-                    <div className="space-y-1">
-                        {data.features.slice(0, 3).map((feature) => (
-                            <div key={feature.id} className="flex items-center gap-2 text-xs">
-                                <span className="w-1.5 h-1.5 bg-[#F5C542] border border-[#2C2416]" />
-                                <span className="text-[#2C2416]/70 truncate">{feature.title}</span>
-                            </div>
-                        ))}
-                        {data.features.length > 3 && (
-                            <span className="text-xs text-[#2C2416]/50 pl-3">
-                                +{data.features.length - 3} more features
-                            </span>
-                        )}
-                    </div>
-                )}
-                
-                {/* CTA */}
-                <div className="flex items-center justify-between pt-2 border-t-2 border-[#2C2416]/20">
-                    <span className="text-xs font-bold text-[#2C2416]/60">
-                        {data.packages?.length || 0} package{(data.packages?.length || 0) !== 1 ? 's' : ''}
-                    </span>
-                    <span className="flex items-center gap-1 text-sm font-bold text-[#2C2416]">
-                        Learn More <ArrowRight className="w-4 h-4" />
-                    </span>
+                {/* Chunky Arrow Button */}
+                <div className="
+                    w-11 h-11 flex items-center justify-center
+                    bg-[#F5C542] border-[3px] border-[#2C2416]
+                    shadow-[3px_3px_0_0_#2C2416]
+                ">
+                    <ArrowRight className="w-5 h-5 text-[#2C2416]" strokeWidth={3} />
                 </div>
             </div>
         </div>

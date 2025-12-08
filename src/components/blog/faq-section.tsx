@@ -68,7 +68,7 @@ export function FAQSection({ faqs: rawFaqs, userIsPremium = false, title = "Freq
                   transition-colors duration-150
                 "
               >
-                <span className="font-bold text-[#2C2416] pr-4 text-[14px] hover:text-[#D35400]">
+                <span className="flex-1 min-w-0 font-bold text-[#2C2416] pr-4 text-[15px] md:text-[17px] lg:text-[19px] hover:text-[#D35400] break-words word-break">
                   {faq.question}
                 </span>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -107,7 +107,7 @@ export function FAQSection({ faqs: rawFaqs, userIsPremium = false, title = "Freq
                       </p>
                     </div>
                   ) : (
-                    <p className="text-[#5A5247] leading-[1.7] font-medium text-[13px]">
+                    <p className="text-[#3D3530] leading-[1.7] font-semibold text-[14px] md:text-[16px] lg:text-[18px] break-words overflow-wrap-anywhere">
                       {faq.answer}
                     </p>
                   )}

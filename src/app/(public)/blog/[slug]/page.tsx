@@ -5,6 +5,9 @@ import { StandardPostLayout } from '@/components/blog/layouts/standard-post-layo
 import { ResearchPaperLayout } from '@/components/blog/layouts/research-paper-layout';
 import type { BlogPost } from '@/types';
 
+// ISR: Regenerate page every 60 seconds
+export const revalidate = 60;
+
 interface BlogPostPageProps {
     params: { slug: string };
 }

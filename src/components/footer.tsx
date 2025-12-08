@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { siteConfig } from '@/config/site';
 
 export function Footer() {
     return (
@@ -21,19 +22,19 @@ export function Footer() {
                             Building exceptional digital experiences with modern technologies and creative solutions.
                         </p>
                         <p className="text-xs text-[#E0E0E0]/60 mb-4">
-                            Founded by <span className="text-[#F5C542] font-bold">Mokammel Morshed</span>
+                            Founded by <span className="text-[#F5C542] font-bold">{siteConfig.founder.name}</span>
                         </p>
                         <div className="flex items-center gap-3">
-                            <a href="#" className="w-10 h-10 border-3 border-white bg-white hover:bg-[#2196F3] text-[#1A1A1A] hover:text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
+                            <a href={siteConfig.urls.github} target="_blank" rel="noopener noreferrer" className="w-10 h-10 border-3 border-white bg-white hover:bg-[#2196F3] text-[#1A1A1A] hover:text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
                                 <Github className="w-5 h-5" />
                             </a>
-                            <a href="#" className="w-10 h-10 border-3 border-white bg-white hover:bg-[#2196F3] text-[#1A1A1A] hover:text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
+                            <a href={siteConfig.urls.twitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 border-3 border-white bg-white hover:bg-[#2196F3] text-[#1A1A1A] hover:text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
                                 <Twitter className="w-5 h-5" />
                             </a>
-                            <a href="#" className="w-10 h-10 border-3 border-white bg-white hover:bg-[#2196F3] text-[#1A1A1A] hover:text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
+                            <a href={siteConfig.urls.linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 border-3 border-white bg-white hover:bg-[#2196F3] text-[#1A1A1A] hover:text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
                                 <Linkedin className="w-5 h-5" />
                             </a>
-                            <a href="#" className="w-10 h-10 border-3 border-white bg-[#FF6B6B] hover:bg-[#FF4444] text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
+                            <a href={`mailto:${siteConfig.contact.email}`} className="w-10 h-10 border-3 border-white bg-[#FF6B6B] hover:bg-[#FF4444] text-white flex items-center justify-center transition-all shadow-[3px_3px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_0_rgba(255,255,255,1)]">
                                 <Mail className="w-5 h-5" />
                             </a>
                         </div>
@@ -108,7 +109,7 @@ export function Footer() {
                             </li>
                             <li className="flex items-center gap-2 font-bold">
                                 <span className="text-[#FF6B6B] text-lg">•</span>
-                                contact@udyomx.com
+                                {siteConfig.contact.email}
                             </li>
                             <li className="flex items-center gap-2 font-bold">
                                 <span className="text-[#F5C542] text-lg">•</span>
@@ -125,11 +126,11 @@ export function Footer() {
                         &copy; 2025 UdyomX ORG. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
-                        <Link href="#" className="hover:text-[#2196F3] transition-colors font-bold">
+                        <Link href={siteConfig.legal.privacyPolicyUrl} className="hover:text-[#2196F3] transition-colors font-bold">
                             Privacy Policy
                         </Link>
                         <span className="text-white">|</span>
-                        <Link href="#" className="hover:text-[#2196F3] transition-colors font-bold">
+                        <Link href={siteConfig.legal.termsOfServiceUrl} className="hover:text-[#2196F3] transition-colors font-bold">
                             Terms of Service
                         </Link>
                     </div>

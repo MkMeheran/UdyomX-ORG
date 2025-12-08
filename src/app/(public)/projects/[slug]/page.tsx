@@ -6,6 +6,9 @@ import { ArrowLeft } from "lucide-react";
 import { Metadata } from "next";
 import type { Project } from "@/types";
 
+// ISR: Regenerate page every 60 seconds
+export const revalidate = 60;
+
 interface Props {
   params: { slug: string };
 }
@@ -175,7 +178,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       <div className="min-h-screen bg-[#F5F1E8]">
         {/* Back Navigation */}
-        <div className="max-w-[1400px] mx-auto px-4 pt-6">
+        <div className="max-w-[1400px] mx-auto px-3 md:px-4 pt-4 md:pt-6">
           <Link
             href="/projects"
             className="

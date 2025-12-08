@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Bold, Italic, Code, Link as LinkIcon, Image as ImageIcon, List, ListOrdered, Heading1, Heading2, Heading3, Quote, Minus, Eye, EyeOff, Table, BarChart2, Calculator } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Bold, Italic, Code, Link as LinkIcon, Image as ImageIcon, List, ListOrdered, Heading1, Heading2, Heading3, Quote, Minus, Eye, EyeOff, Table, BarChart2, Calculator, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { extractHeadingsFromContent } from '@/lib/slug-utils';
+import { uploadGalleryImage } from '@/lib/supabase/storage';
 import type { ContentFormat, EditorTOCItem } from '@/types/editor';
 
 interface ContentEditorProps {
@@ -49,7 +50,9 @@ export function ContentEditor({
     minHeight = '400px'
 }: ContentEditorProps) {
     const [showPreview, setShowPreview] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     // Generate TOC from content
     useEffect(() => {
@@ -63,6 +66,46 @@ export function ContentEditor({
             onTOCChange(tocItems);
         }
     }, [content, onTOCChange]);
+    
+    // Handle file upload
+    const handleFileUpload = useCallback(async (file: File) => {
+        setUploading(true);
+        try {
+            const result = await uploadGalleryImage(file, 'content-images');
+            
+            if (result.success && result.url) {
+                const isMarkdown = format === 'markdown' || format === 'mdx';
+                const altText = file.name.replace(/\.[^/.]+$/, '');
+                
+                if (isMarkdown) {
+                    insertAtCursor(`![${altText}](${result.url})`);
+                } else {
+                    insertAtCursor(`<img src="${result.url}" alt="${altText}" />`);
+                }
+            } else {
+                alert(`Upload failed: ${result.error}`);
+            }
+        } catch (error: any) {
+            alert(`Upload error: ${error.message}`);
+        } finally {
+            setUploading(false);
+        }
+    }, [format]);
+    
+    // Trigger file input
+    const triggerFileInput = useCallback(() => {
+        fileInputRef.current?.click();
+    }, []);
+    
+    // Handle file input change
+    const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            handleFileUpload(file);
+        }
+        // Reset input
+        e.target.value = '';
+    }, [handleFileUpload]);
     
     // Insert text at cursor position
     const insertAtCursor = useCallback((before: string, after: string = '', selectInner: boolean = false) => {
@@ -119,11 +162,8 @@ export function ContentEditor({
                     }
                     break;
                 case 'image':
-                    if (isMarkdown) {
-                        insertAtCursor('![', '](https://)', true);
-                    } else {
-                        insertAtCursor('<img src="https://" alt="', '" />', true);
-                    }
+                    // Trigger file upload dialog
+                    triggerFileInput();
                     break;
                 case 'table':
                     if (isMarkdown) {
@@ -254,10 +294,19 @@ export function ContentEditor({
             
             {/* Toolbar */}
             <div className="flex flex-wrap gap-1 p-2 bg-[#F5F1E8] border-4 border-[#2C2416]">
+                {/* Hidden file input */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                />
+                
                 {toolbarButtons.map((button, index) => {
                     if ('type' in button && button.type === 'divider') {
                         return (
-                            <div key={index} className="w-px h-8 bg-[#2C2416]/20 mx-1" />
+                            <div key={`divider-${index}`} className="w-px h-8 bg-[#2C2416]/20 mx-1" />
                         );
                     }
                     
@@ -267,16 +316,27 @@ export function ContentEditor({
                     
                     return (
                         <button
-                            key={index}
+                            key={`btn-${button.label}-${index}`}
                             type="button"
                             onClick={() => handleToolbarClick(button)}
                             title={button.label}
-                            className="p-2 hover:bg-[#F5C542] transition-colors border-2 border-transparent hover:border-[#2C2416]"
+                            disabled={uploading && button.special === 'image'}
+                            className={cn(
+                                'p-2 hover:bg-[#F5C542] transition-colors border-2 border-transparent hover:border-[#2C2416]',
+                                uploading && button.special === 'image' && 'opacity-50 cursor-wait'
+                            )}
                         >
                             <Icon className="w-4 h-4" />
                         </button>
                     );
                 })}
+                
+                {uploading && (
+                    <div className="flex items-center gap-2 px-2 text-sm text-[#2C2416]/70">
+                        <Upload className="w-4 h-4 animate-pulse" />
+                        Uploading...
+                    </div>
+                )}
             </div>
             
             {/* Editor / Preview */}

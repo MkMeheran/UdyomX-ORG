@@ -35,7 +35,8 @@ export async function generateUniqueSlug(
     existingSlugs: string[], 
     currentSlug?: string
 ): Promise<string> {
-    let slug = generateSlug(text);
+    const slugList = Array.isArray(existingSlugs) ? existingSlugs : [];
+    const slug = generateSlug(text);
     
     // If it's the same as current slug, no change needed
     if (currentSlug && slug === currentSlug) {
@@ -43,14 +44,14 @@ export async function generateUniqueSlug(
     }
     
     // Check if slug exists
-    if (!existingSlugs.includes(slug)) {
+    if (!slugList.includes(slug)) {
         return slug;
     }
     
     // Add number suffix to make unique
     let counter = 1;
     let newSlug = `${slug}-${counter}`;
-    while (existingSlugs.includes(newSlug)) {
+    while (slugList.includes(newSlug)) {
         counter++;
         newSlug = `${slug}-${counter}`;
     }
@@ -81,6 +82,14 @@ export async function getAllSlugs(): Promise<{
     }
 }
 
+// Helper: get slugs for a single type
+export async function getSlugsByType(type: 'post' | 'project' | 'service'): Promise<string[]> {
+    const all = await getAllSlugs();
+    if (type === 'post') return all.blogs || [];
+    if (type === 'project') return all.projects || [];
+    return all.services || [];
+}
+
 // Calculate read time from content
 export function calculateReadTime(content: string): number {
     const wordsPerMinute = 200;
@@ -96,6 +105,24 @@ export function extractHeadingsFromContent(content: string): Array<{
     level: number;
 }> {
     const headings: Array<{ id: string; text: string; level: number }> = [];
+    const usedIds = new Set<string>();
+    
+    // Helper to generate unique ID
+    const getUniqueId = (baseId: string): string => {
+        if (!usedIds.has(baseId)) {
+            usedIds.add(baseId);
+            return baseId;
+        }
+        
+        let counter = 1;
+        let uniqueId = `${baseId}-${counter}`;
+        while (usedIds.has(uniqueId)) {
+            counter++;
+            uniqueId = `${baseId}-${counter}`;
+        }
+        usedIds.add(uniqueId);
+        return uniqueId;
+    };
     
     // Match markdown headings (## or ###)
     const mdRegex = /^(#{2,3})\s+(.+)$/gm;
@@ -104,7 +131,8 @@ export function extractHeadingsFromContent(content: string): Array<{
     while ((match = mdRegex.exec(content)) !== null) {
         const level = match[1].length;
         const text = match[2].trim();
-        const id = generateSlug(text);
+        const baseId = generateSlug(text);
+        const id = getUniqueId(baseId);
         headings.push({ id, text, level });
     }
     
@@ -113,7 +141,8 @@ export function extractHeadingsFromContent(content: string): Array<{
     while ((match = htmlRegex.exec(content)) !== null) {
         const level = parseInt(match[1]);
         const text = match[2].trim();
-        const id = generateSlug(text);
+        const baseId = generateSlug(text);
+        const id = getUniqueId(baseId);
         headings.push({ id, text, level });
     }
     

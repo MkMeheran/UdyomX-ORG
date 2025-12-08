@@ -34,8 +34,8 @@ export function TestimonialsSection({ testimonials }: TestimonialsProps) {
     };
 
     return (
-        <section className="py-10 md:py-14 bg-[#F5F5F0]">
-            <div className="max-w-5xl mx-auto px-4">
+        <section className="py-6 md:py-10 bg-[#F5F5F0]">
+            <div className="max-w-7xl mx-auto px-4">
                 {/* Section Header */}
                 <div className="text-center mb-10">
                     <h2 className="text-3xl md:text-4xl font-black text-[#2C2416] mb-3">

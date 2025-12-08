@@ -256,7 +256,11 @@ export async function PUT(
         
         if (updateError) {
             console.error('❌ Update Service Error:', updateError);
-            return NextResponse.json({ error: updateError.message }, { status: 400 });
+            return NextResponse.json({ 
+                error: 'Failed to update service', 
+                details: updateError.message,
+                code: updateError.code 
+            }, { status: 400 });
         }
         
         // Delete existing relations and re-insert
@@ -275,10 +279,18 @@ export async function PUT(
         // Insert related data
         const insertRelatedData = async (tableName: string, items: any[], transformer: (item: any, idx: number) => any) => {
             if (items && items.length > 0) {
-                const { error } = await supabase
-                    .from(tableName)
-                    .insert(items.map((item, idx) => transformer(item, idx)));
-                if (error) console.error(`❌ Insert ${tableName} Error:`, error);
+                const transformedItems = items.map((item, idx) => transformer(item, idx));
+                // Filter out items with null required fields
+                const validItems = tableName === 'service_downloads' 
+                    ? transformedItems.filter(item => item.file_url)
+                    : transformedItems;
+                
+                if (validItems.length > 0) {
+                    const { error } = await supabase
+                        .from(tableName)
+                        .insert(validItems);
+                    if (error) console.error(`❌ Insert ${tableName} Error:`, error);
+                }
             }
         };
         
@@ -364,9 +376,13 @@ export async function PUT(
         
         console.log(`✅ Service Updated: "${serviceData.title}"`);
         return NextResponse.json({ id: serviceId, ...serviceData });
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ Update Service Exception:', error);
-        return NextResponse.json({ error: 'Failed to update service' }, { status: 500 });
+        return NextResponse.json({ 
+            error: 'Failed to update service',
+            details: error?.message || 'Unknown error',
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        }, { status: 500 });
     }
 }
 

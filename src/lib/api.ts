@@ -339,7 +339,13 @@ export const serviceAPI = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error('Failed to update service');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error: any = new Error(errorData.error || 'Failed to update service');
+      error.details = errorData.details;
+      error.code = errorData.code;
+      throw error;
+    }
     return response.json();
   },
   
@@ -374,14 +380,66 @@ function transformService(row: any): Service {
 function transformServiceFull(row: any): Service {
   return {
     ...transformService(row),
-    features: row.service_features || [],
-    packages: row.service_packages || [],
-    problems: row.service_problems || [],
-    solutions: row.service_solutions || [],
-    testimonials: row.service_testimonials || [],
-    gallery: row.service_gallery || [],
-    downloads: row.service_downloads || [],
-    faqs: row.service_faqs || [],
+    showGallery: row.show_gallery ?? false,
+    showDownloads: row.show_downloads ?? false,
+    features: (row.service_features || []).map((f: any) => ({
+      id: f.id,
+      icon: f.icon,
+      title: f.title,
+      description: f.description,
+      orderIndex: f.order_index
+    })),
+    packages: (row.service_packages || []).map((p: any) => ({
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      discountPrice: p.discount_price,
+      features: p.features || [],
+      deliveryTime: p.delivery_time,
+      revisions: p.revisions,
+      isPopular: p.is_popular,
+      orderIndex: p.order_index
+    })),
+    problems: (row.service_problems || []).map((p: any) => ({
+      id: p.id,
+      text: p.text,
+      orderIndex: p.order_index
+    })),
+    solutions: (row.service_solutions || []).map((s: any) => ({
+      id: s.id,
+      text: s.text,
+      orderIndex: s.order_index
+    })),
+    testimonials: (row.service_testimonials || []).map((t: any) => ({
+      id: t.id,
+      name: t.name,
+      avatar: t.avatar,
+      rating: t.rating,
+      quote: t.quote,
+      orderIndex: t.order_index
+    })),
+    gallery: (row.service_gallery || []).map((g: any) => ({
+      id: g.id,
+      type: g.type,
+      url: g.url,
+      thumbnailUrl: g.thumbnail_url,
+      caption: g.caption,
+      orderIndex: g.order_index
+    })),
+    downloads: (row.service_downloads || []).map((d: any) => ({
+      id: d.id,
+      fileUrl: d.file_url,
+      label: d.label,
+      fileSize: d.file_size,
+      fileType: d.file_type,
+      orderIndex: d.order_index
+    })),
+    faqs: (row.service_faqs || []).map((f: any) => ({
+      id: f.id,
+      question: f.question,
+      answer: f.answer,
+      orderIndex: f.order_index
+    })),
   } as Service;
 }
 

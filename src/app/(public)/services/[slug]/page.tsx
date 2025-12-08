@@ -4,6 +4,9 @@ import { serviceAPI, projectAPI } from '@/lib/api';
 import { ServiceDetailLayout } from '@/components/service/ServiceDetailLayout';
 import type { ServiceFull } from '@/types/service';
 
+// ISR: Regenerate page every 60 seconds
+export const revalidate = 60;
+
 interface ServicePageProps {
     params: { slug: string };
 }
@@ -64,9 +67,14 @@ export default async function ServicePage({ params }: ServicePageProps) {
         notFound();
     }
 
-    // Get related projects
-    const allProjects = await projectAPI.getAll();
-    const relatedProjects = allProjects.slice(0, 4);
+    // Get related projects - only if explicitly set in service data
+    let relatedProjects = [];
+    if (service.relatedProjects && service.relatedProjects.length > 0) {
+        const allProjects = await projectAPI.getAll();
+        relatedProjects = allProjects.filter(p => 
+            service.relatedProjects?.includes(p.id)
+        ).slice(0, 4);
+    }
 
     return (
         <ServiceDetailLayout 

@@ -8,11 +8,11 @@ import { ServicePortfolio } from './service-portfolio';
 import { TestimonialsSection } from './testimonials-section';
 import { PricingPackages } from './pricing-packages';
 import { ServiceFAQ } from './service-faq';
-import { GalleryDownloads } from './gallery-downloads';
+import { MediaGallery } from '@/components/blog/media-gallery';
 import { StickyCTA } from './sticky-cta';
 import { MDXRenderer } from '@/components/common/MDXRenderer';
 import type { ServiceFull } from '@/types/service';
-import type { Project, FAQ } from '@/types';
+import type { Project, FAQ, GalleryItem } from '@/types';
 
 interface ServiceDetailLayoutProps {
     service: ServiceFull;
@@ -92,14 +92,20 @@ export function ServiceDetailLayout({ service, relatedProjects = [] }: ServiceDe
                 2. SERVICE DESCRIPTION (HTML/MDX) - Second Box
             ═══════════════════════════════════════════════════════════ */}
             {service.description && (
-                <section className="py-10 md:py-14 bg-[#F5F5F0]">
-                    <div className="max-w-5xl mx-auto px-4">
+                <section className="py-6 md:py-10 bg-[#F5F5F0]">
+                    <div className="max-w-7xl mx-auto px-4">
                         <div
                             className="
                                 bg-[#F5F1E8] border-[4px] border-[#2C2416]
                                 shadow-[6px_6px_0_0_rgba(44,36,22,0.4)]
-                                p-6 md:p-10
+                                p-6 md:p-10 overflow-hidden
                             "
+                            style={{
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word',
+                                wordBreak: 'break-word',
+                                hyphens: 'auto'
+                            }}
                         >
                             {/* Render based on content format */}
                             {service.contentFormat === 'html' ? (
@@ -116,6 +122,12 @@ export function ServiceDetailLayout({ service, relatedProjects = [] }: ServiceDe
                                         prose-ul:text-[#5A5247] prose-ol:text-[#5A5247]
                                         prose-li:font-medium prose-li:text-[16px]
                                     "
+                                    style={{
+                                        wordWrap: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'normal'
+                                    }}
                                 />
                             ) : (
                                 <MDXRenderer 
@@ -160,13 +172,100 @@ export function ServiceDetailLayout({ service, relatedProjects = [] }: ServiceDe
             {/* ═══════════════════════════════════════════════════════════
                 7. GALLERY & DOWNLOADS
             ═══════════════════════════════════════════════════════════ */}
-            {((service.showGallery && service.gallery?.length) || (service.showDownloads && service.downloads?.length)) && (
-                <GalleryDownloads
-                    gallery={service.gallery}
-                    downloads={service.downloads}
-                    showGallery={service.showGallery}
-                    showDownloads={service.showDownloads}
-                />
+            {service.showGallery && service.gallery && service.gallery.length > 0 && (
+                <div className="py-6 md:py-10 bg-[#F0F0F3]">
+                    <div className="max-w-7xl mx-auto px-4">
+                        <MediaGallery 
+                            images={service.gallery as GalleryItem[]} 
+                            title="Service Gallery"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Downloads Section */}
+            {service.showDownloads && service.downloads && service.downloads.length > 0 && (
+                <section className="py-6 md:py-10 bg-[#F5F5F0]">
+                    <div className="max-w-7xl mx-auto px-4">
+                        <div className="bg-[#F5F1E8] border-[4px] border-[#2C2416] p-6 md:p-8 shadow-[6px_6px_0_0_rgba(44,36,22,0.4)]">
+                            {/* Section Header */}
+                            <div className="mb-6 pb-4 border-b-[3px] border-[#2C2416]">
+                                <h3 className="text-2xl md:text-3xl font-black text-[#2C2416] flex items-center gap-3">
+                                    <span className="w-12 h-12 flex items-center justify-center bg-[#2196F3] border-[3px] border-[#2C2416] shadow-[3px_3px_0_0_#2C2416] text-2xl">
+                                        📥
+                                    </span>
+                                    Downloads
+                                </h3>
+                                <p className="text-[#5A5247] font-medium text-sm mt-2 ml-[60px]">
+                                    Click to download resources and files
+                                </p>
+                            </div>
+                            
+                            {/* Downloads Grid */}
+                            <div className="grid gap-3 md:gap-4">
+                                {service.downloads.map((download) => (
+                                    <a
+                                        key={download.id}
+                                        href={download.fileUrl}
+                                        download
+                                        className="
+                                            group flex items-center justify-between p-4 md:p-5
+                                            bg-white border-[3px] border-[#2C2416]
+                                            shadow-[4px_4px_0_0_rgba(44,36,22,0.3)]
+                                            hover:-translate-x-1 hover:-translate-y-1
+                                            hover:shadow-[6px_6px_0_0_rgba(44,36,22,0.4)]
+                                            hover:bg-[#F5C542]
+                                            active:translate-x-0 active:translate-y-0
+                                            active:shadow-[3px_3px_0_0_rgba(44,36,22,0.3)]
+                                            transition-all duration-150
+                                        "
+                                    >
+                                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                                            {/* File Icon */}
+                                            <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-[#F5F1E8] border-[2px] border-[#2C2416] group-hover:bg-white transition-colors">
+                                                <span className="text-2xl">
+                                                    {download.fileType?.toLowerCase() === 'pdf' ? '📄' : 
+                                                     download.fileType?.toLowerCase() === 'zip' || download.fileType?.toLowerCase() === 'rar' ? '📦' : 
+                                                     download.fileType?.toLowerCase() === 'doc' || download.fileType?.toLowerCase() === 'docx' ? '📝' : 
+                                                     download.fileType?.toLowerCase() === 'xls' || download.fileType?.toLowerCase() === 'xlsx' ? '📊' :
+                                                     download.fileType?.toLowerCase() === 'png' || download.fileType?.toLowerCase() === 'jpg' || download.fileType?.toLowerCase() === 'jpeg' ? '🖼️' : '📎'}
+                                                </span>
+                                            </div>
+                                            
+                                            {/* File Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-black text-[#2C2416] text-[15px] md:text-[16px] leading-tight break-words" style={{overflowWrap: 'break-word', wordBreak: 'break-word'}}>
+                                                    {download.label}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                    {download.fileType && (
+                                                        <span className="inline-block px-2 py-0.5 bg-[#2C2416] text-white text-[10px] font-bold uppercase tracking-wider">
+                                                            {download.fileType}
+                                                        </span>
+                                                    )}
+                                                    {download.fileSize && (
+                                                        <span className="text-xs text-[#5A5247] font-medium">
+                                                            {download.fileSize}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Download Arrow */}
+                                        <div className="flex-shrink-0 ml-3">
+                                            <div className="w-10 h-10 flex items-center justify-center border-[2px] border-[#2C2416] bg-[#F5F1E8] group-hover:bg-[#2C2416] transition-colors">
+                                                <span className="text-[#2C2416] group-hover:text-white font-black text-xl transition-colors">
+                                                    ↓
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
             )}
 
             {/* ═══════════════════════════════════════════════════════════

@@ -19,14 +19,8 @@ export function GalleryEditor({ items, onChange, maxItems = 20, folder }: Galler
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState<string>('');
+    const [pendingItems, setPendingItems] = useState<EditorMediaItem[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
-    const [newItem, setNewItem] = useState<Partial<EditorMediaItem>>({
-        type: 'image',
-        url: '',
-        altText: '',
-        source: 'upload'
-    });
     
     // Handle file upload to Supabase
     const handleFileUpload = useCallback(async (files: FileList | null) => {
@@ -35,7 +29,7 @@ export function GalleryEditor({ items, onChange, maxItems = 20, folder }: Galler
         setUploading(true);
         setUploadError(null);
         
-        const newItems: EditorMediaItem[] = [];
+        const uploaded: EditorMediaItem[] = [];
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -49,29 +43,40 @@ export function GalleryEditor({ items, onChange, maxItems = 20, folder }: Galler
                     type: result.fileType === 'video' ? 'video' : 'image',
                     url: result.url,
                     altText: file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' '),
+                    caption: '',
                     source: 'upload',
                     storagePath: result.path,
-                    orderIndex: items.length + newItems.length
+                    orderIndex: items.length + uploaded.length
                 };
-                newItems.push(item);
+                uploaded.push(item);
             } else {
                 setUploadError(`Failed to upload ${file.name}: ${result.error}`);
             }
         }
         
-        if (newItems.length > 0) {
-            onChange([...items, ...newItems]);
-        }
-        
+        setPendingItems(uploaded);
         setUploading(false);
         setUploadProgress('');
-        setShowAddModal(false);
         
         // Reset file input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-    }, [items, onChange, folder]);
+    }, [items, folder]);
+    
+    // Add pending items to gallery
+    const handleAddPendingItems = useCallback(() => {
+        onChange([...items, ...pendingItems]);
+        setPendingItems([]);
+        setShowAddModal(false);
+    }, [items, pendingItems, onChange]);
+    
+    // Update pending item metadata
+    const updatePendingItem = useCallback((id: string, updates: Partial<EditorMediaItem>) => {
+        setPendingItems(prev => prev.map(item => 
+            item.id === id ? { ...item, ...updates } : item
+        ));
+    }, []);
     
     const removeItem = useCallback((id: string) => {
         // TODO: Also delete from Supabase storage if needed
@@ -174,14 +179,21 @@ export function GalleryEditor({ items, onChange, maxItems = 20, folder }: Galler
                                 </span>
                             </div>
                             
-                            {/* Alt Text */}
-                            <div className="p-2 bg-white border-t-4 border-[#2C2416]">
+                            {/* Alt Text & Caption */}
+                            <div className="p-2 bg-white border-t-4 border-[#2C2416] space-y-1">
                                 <input
                                     type="text"
                                     value={item.altText}
                                     onChange={(e) => updateItem(item.id, { altText: e.target.value })}
-                                    placeholder="Alt text..."
-                                    className="w-full text-xs bg-transparent outline-none font-medium"
+                                    placeholder="Alt text (for SEO & accessibility)..."
+                                    className="w-full text-xs bg-transparent outline-none font-medium border-b border-[#2C2416]/20 pb-1"
+                                />
+                                <input
+                                    type="text"
+                                    value={item.caption || ''}
+                                    onChange={(e) => updateItem(item.id, { caption: e.target.value })}
+                                    placeholder="Caption (displayed below image)..."
+                                    className="w-full text-xs bg-transparent outline-none font-medium text-[#2C2416]/70"
                                 />
                             </div>
                         </div>
@@ -228,38 +240,83 @@ export function GalleryEditor({ items, onChange, maxItems = 20, folder }: Galler
                         )}
                         
                         {/* Upload Area */}
-                        <div 
-                            className={cn(
-                                "relative p-8 border-4 border-dashed bg-white text-center transition-all",
-                                uploading 
-                                    ? "border-[#F5C542] bg-[#F5C542]/10" 
-                                    : "border-[#2C2416]/50 hover:border-[#2C2416] cursor-pointer"
-                            )}
-                            onClick={() => !uploading && fileInputRef.current?.click()}
-                            onDragOver={handleDragOver}
-                            onDrop={handleDrop}
-                        >
-                            {uploading ? (
-                                <>
-                                    <Loader2 className="w-10 h-10 mx-auto text-[#F5C542] animate-spin mb-2" />
-                                    <p className="font-bold text-[#2C2416]">{uploadProgress || 'Uploading...'}</p>
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="w-10 h-10 mx-auto text-[#2C2416]/50 mb-2" />
-                                    <p className="font-bold text-[#2C2416]">Click or drag files to upload</p>
-                                    <p className="text-sm text-[#2C2416]/60 mt-1">
-                                        Images: JPG, PNG, GIF, WebP (max {formatFileSize(FILE_LIMITS.IMAGE)})
-                                    </p>
-                                    <p className="text-sm text-[#2C2416]/60">
-                                        Videos: MP4, WebM (max {formatFileSize(FILE_LIMITS.VIDEO)})
-                                    </p>
-                                    <p className="text-xs text-[#2C2416]/40 mt-2">
-                                        You can select multiple files
-                                    </p>
-                                </>
-                            )}
-                        </div>
+                        {pendingItems.length === 0 ? (
+                            <div 
+                                className={cn(
+                                    "relative p-8 border-4 border-dashed bg-white text-center transition-all",
+                                    uploading 
+                                        ? "border-[#F5C542] bg-[#F5C542]/10" 
+                                        : "border-[#2C2416]/50 hover:border-[#2C2416] cursor-pointer"
+                                )}
+                                onClick={() => !uploading && fileInputRef.current?.click()}
+                                onDragOver={handleDragOver}
+                                onDrop={handleDrop}
+                            >
+                                {uploading ? (
+                                    <>
+                                        <Loader2 className="w-10 h-10 mx-auto text-[#F5C542] animate-spin mb-2" />
+                                        <p className="font-bold text-[#2C2416]">{uploadProgress || 'Uploading...'}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-10 h-10 mx-auto text-[#2C2416]/50 mb-2" />
+                                        <p className="font-bold text-[#2C2416]">Click or drag files to upload</p>
+                                        <p className="text-sm text-[#2C2416]/60 mt-1">
+                                            Images: JPG, PNG, GIF, WebP (max {formatFileSize(FILE_LIMITS.IMAGE)})
+                                        </p>
+                                        <p className="text-sm text-[#2C2416]/60">
+                                            Videos: MP4, WebM (max {formatFileSize(FILE_LIMITS.VIDEO)})
+                                        </p>
+                                        <p className="text-xs text-[#2C2416]/40 mt-2">
+                                            You can select multiple files
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                                <p className="text-sm font-bold text-[#2C2416] mb-2">
+                                    ✅ {pendingItems.length} file(s) uploaded. Add alt text & caption:
+                                </p>
+                                {pendingItems.map((item) => (
+                                    <div key={item.id} className="bg-white border-3 border-[#2C2416] p-3 space-y-2">
+                                        <div className="flex gap-3">
+                                            <img 
+                                                src={item.url} 
+                                                alt={item.altText}
+                                                className="w-20 h-20 object-cover border-2 border-[#2C2416]"
+                                            />
+                                            <div className="flex-1 space-y-2">
+                                                <div>
+                                                    <label className="text-xs font-bold text-[#2C2416] block mb-1">
+                                                        Alt Text (SEO & Accessibility) *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={item.altText}
+                                                        onChange={(e) => updatePendingItem(item.id, { altText: e.target.value })}
+                                                        placeholder="Describe the image..."
+                                                        className="w-full px-2 py-1 text-sm border-2 border-[#2C2416] focus:border-[#F5C542] outline-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-[#2C2416] block mb-1">
+                                                        Caption (Display below image)
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={item.caption || ''}
+                                                        onChange={(e) => updatePendingItem(item.id, { caption: e.target.value })}
+                                                        placeholder="Optional caption..."
+                                                        className="w-full px-2 py-1 text-sm border-2 border-[#2C2416] focus:border-[#F5C542] outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         
                         <input
                             ref={fileInputRef}
@@ -281,19 +338,29 @@ export function GalleryEditor({ items, onChange, maxItems = 20, folder }: Galler
                             </ul>
                         </div>
                         
-                        {/* Close Button */}
-                        <div className="mt-4 flex justify-end">
+                        {/* Action Buttons */}
+                        <div className="mt-4 flex justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => {
                                     setShowAddModal(false);
+                                    setPendingItems([]);
                                     setUploadError(null);
                                 }}
                                 className="px-6 py-2 font-bold border-4 border-[#2C2416] bg-white hover:bg-[#F5F1E8] transition-all"
                                 disabled={uploading}
                             >
-                                Close
+                                {pendingItems.length > 0 ? 'Cancel' : 'Close'}
                             </button>
+                            {pendingItems.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleAddPendingItems}
+                                    className="px-6 py-2 font-bold border-4 border-[#2C2416] bg-[#F5C542] hover:bg-[#D35400] hover:text-white transition-all"
+                                >
+                                    Add to Gallery
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

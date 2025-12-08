@@ -20,25 +20,25 @@ export interface ContactInfo {
 // ═══════════════════════════════════════════════════════════════
 export const defaultContactInfo: ContactInfo = {
     // WhatsApp: Use format +880XXXXXXXXXX (with country code)
-    whatsapp: '+8801XXXXXXXXX',
+    whatsapp: '+8801884655417',
     
     // Telegram: Use @username or https://t.me/username
-    telegram: 'udyomx',
+    telegram: '+8801884655417',
     
     // Twitter/X: Use @username or https://twitter.com/username
-    twitter: 'udyomx',
+    twitter: 'Meheran_3005',
     
     // Instagram: Use @username or https://instagram.com/username
-    instagram: 'udyomx',
+    instagram: 'mokammel_morshed',
     
     // Facebook: Use page URL or username
-    facebook: 'udyomx',
+    facebook: 'Meheran216',
     
     // LinkedIn: Use profile/company URL
-    linkedin: 'company/udyomx',
+    linkedin: 'mokammel-morshed',
     
     // Email: Your contact email
-    email: 'contact@udyomx.org',
+    email: 'mdmokammelmorshed@gmail.com',
 };
 
 // ═══════════════════════════════════════════════════════════════

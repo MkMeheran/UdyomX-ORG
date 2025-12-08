@@ -46,19 +46,15 @@ export function ProjectDetailLayout({ project }: ProjectDetailLayoutProps) {
                 {project.name}
               </h1>
 
-              {/* Tech Stack as Hashtags */}
-              {project.techStack && project.techStack.length > 0 && (
-                <div className="flex flex-wrap gap-3 mb-5">
-                  {project.techStack.map((tech) => (
+              {/* Simple Blue Tags from SEO Keywords */}
+              {(project as any).seo?.secondaryKeywords && (project as any).seo.secondaryKeywords.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {(project as any).seo.secondaryKeywords.map((tag: string) => (
                     <span
-                      key={tech}
-                      className="
-                        text-[#2196F3] text-[14px] font-bold
-                        hover:text-[#D35400]
-                        transition-colors duration-150 cursor-pointer
-                      "
+                      key={tag}
+                      className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded"
                     >
-                      #{tech.replace(/\s+/g, "")}
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -170,6 +166,13 @@ export function ProjectDetailLayout({ project }: ProjectDetailLayoutProps) {
                 </div>
               )}
             </article>
+
+            {/* FAQ Section - Full Width in Main Content */}
+            {project.faqs && project.faqs.length > 0 && (
+              <div className="mt-12">
+                <FAQSection faqs={project.faqs} />
+              </div>
+            )}
 
             {/* Gallery Section - Full Width in Main Content */}
             {project.images && project.images.length > 1 && (
@@ -293,7 +296,22 @@ export function ProjectDetailLayout({ project }: ProjectDetailLayoutProps) {
                 </div>
               )}
 
-              {/* Project Status */}
+              {/* Gallery */}
+              {project.gallery && project.gallery.length > 0 && (
+                <MediaGallery images={project.gallery} />
+              )}
+
+              {/* Downloads */}
+              {project.downloads && project.downloads.length > 0 && (
+                <DownloadSection downloads={project.downloads} />
+              )}
+
+              {/* Recommended Content */}
+              {project.recommended && project.recommended.length > 0 && (
+                <RecommendedContent items={project.recommended} itemsPerPage={2} />
+              )}
+
+              {/* Project Status - Bottom of Sidebar */}
               <div
                 className="
                   bg-[#F5F1E8] border-[4px] border-[#2C2416]
@@ -324,26 +342,6 @@ export function ProjectDetailLayout({ project }: ProjectDetailLayoutProps) {
                   </div>
                 )}
               </div>
-
-              {/* Gallery */}
-              {project.gallery && project.gallery.length > 0 && (
-                <MediaGallery images={project.gallery} />
-              )}
-
-              {/* Downloads */}
-              {project.downloads && project.downloads.length > 0 && (
-                <DownloadSection downloads={project.downloads} />
-              )}
-
-              {/* FAQ */}
-              {project.faqs && project.faqs.length > 0 && (
-                <FAQSection faqs={project.faqs} />
-              )}
-
-              {/* Recommended Content */}
-              {project.recommended && project.recommended.length > 0 && (
-                <RecommendedContent items={project.recommended} itemsPerPage={2} />
-              )}
             </div>
           </aside>
         </div>
@@ -388,11 +386,6 @@ export function ProjectDetailLayout({ project }: ProjectDetailLayoutProps) {
           {/* Downloads - Mobile */}
           {project.downloads && project.downloads.length > 0 && (
             <DownloadSection downloads={project.downloads} />
-          )}
-
-          {/* FAQ - Mobile */}
-          {project.faqs && project.faqs.length > 0 && (
-            <FAQSection faqs={project.faqs} />
           )}
 
           {/* Recommended - Mobile */}

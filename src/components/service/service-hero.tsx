@@ -19,7 +19,7 @@ export function ServiceHero({ title, hookLine, category, deliveryTime, coverImag
 
     return (
         <section className="relative pt-8 pb-12 md:pt-12 md:pb-16 bg-[#F5F5F0]">
-            <div className="max-w-5xl mx-auto px-4">
+            <div className="max-w-7xl mx-auto px-4">
                 {/* Chunky Brutalist Container */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -62,7 +62,7 @@ export function ServiceHero({ title, hookLine, category, deliveryTime, coverImag
 
                     {/* Hook Line */}
                     {hookLine && (
-                        <p className="text-base md:text-lg text-[#5A5247] font-semibold mb-6 leading-relaxed">
+                        <p className="text-base md:text-lg text-[#5A5247] font-semibold mb-6 leading-relaxed break-words overflow-wrap-anywhere">
                             {hookLine}
                         </p>
                     )}

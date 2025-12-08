@@ -37,8 +37,8 @@ export function ServicePortfolio({ projects }: ServicePortfolioProps) {
     };
 
     return (
-        <section className="py-10 md:py-14 bg-[#F0F0F3]">
-            <div className="max-w-5xl mx-auto px-4">
+        <section className="py-6 md:py-10 bg-[#F0F0F3]">
+            <div className="max-w-7xl mx-auto px-4">
                 {/* Section Header */}
                 <div className="flex items-center gap-3 mb-8">
                     <div

@@ -28,8 +28,8 @@ export function ProblemSolution({ problems, solutions }: ProblemSolutionProps) {
     };
 
     return (
-        <section className="py-10 md:py-14 bg-[#F5F5F0]">
-            <div className="max-w-5xl mx-auto px-4">
+        <section className="py-6 md:py-10 bg-[#F5F5F0]">
+            <div className="max-w-7xl mx-auto px-4">
                 <div className="grid md:grid-cols-2 gap-5">
                     {/* Problems Card - Red Theme */}
                     {problems.length > 0 && (
@@ -79,7 +79,7 @@ export function ProblemSolution({ problems, solutions }: ProblemSolutionProps) {
                                         >
                                             <X className="w-4 h-4" strokeWidth={3} />
                                         </div>
-                                        <span className="text-[15px] text-[#7F1D1D] font-semibold leading-relaxed">
+                                        <span className="text-[15px] text-[#7F1D1D] font-semibold leading-relaxed break-words hyphens-auto" style={{overflowWrap: 'anywhere'}}>
                                             {problem.text}
                                         </span>
                                     </motion.li>
@@ -136,7 +136,7 @@ export function ProblemSolution({ problems, solutions }: ProblemSolutionProps) {
                                         >
                                             <Check className="w-4 h-4" strokeWidth={3} />
                                         </div>
-                                        <span className="text-[15px] text-[#166534] font-semibold leading-relaxed">
+                                        <span className="text-[15px] text-[#166534] font-semibold leading-relaxed break-words hyphens-auto" style={{overflowWrap: 'anywhere'}}>
                                             {solution.text}
                                         </span>
                                     </motion.li>

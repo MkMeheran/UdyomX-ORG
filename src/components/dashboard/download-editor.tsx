@@ -150,13 +150,20 @@ export function DownloadEditor({ items, onChange, maxItems = 10, folder }: Downl
                             </div>
                             
                             {/* File Info */}
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 space-y-2">
                                 <input
                                     type="text"
                                     value={item.title}
                                     onChange={(e) => updateItem(item.id, { title: e.target.value })}
-                                    className="w-full font-bold text-[#2C2416] bg-transparent outline-none"
+                                    className="w-full font-bold text-[#2C2416] bg-transparent border-2 border-transparent focus:border-[#2C2416] px-2 py-1 outline-none"
                                     placeholder="File title..."
+                                />
+                                <input
+                                    type="text"
+                                    value={item.altText || ''}
+                                    onChange={(e) => updateItem(item.id, { altText: e.target.value })}
+                                    className="w-full text-sm text-[#2C2416]/70 bg-transparent border-2 border-transparent focus:border-[#2C2416] px-2 py-1 outline-none"
+                                    placeholder="Alt text (optional)..."
                                 />
                                 <div className="flex items-center gap-2 text-sm text-[#2C2416]/60">
                                     {item.fileType && (

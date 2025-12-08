@@ -89,7 +89,7 @@ export function ServiceCard({ service, index = 0 }: ServiceCardProps) {
           >
             {service.title || service.name}
           </h3>
-          <p className="text-[14px] text-[#5A5247] font-medium line-clamp-3 leading-[1.6] flex-1">
+          <p className="text-[14px] text-[#5A5247] font-medium line-clamp-3 leading-[1.6] flex-1 break-words" style={{overflowWrap: 'break-word', wordBreak: 'break-word'}}>
             {service.hookLine || service.description}
           </p>
         </div>
@@ -99,7 +99,7 @@ export function ServiceCard({ service, index = 0 }: ServiceCardProps) {
         ═══════════════════════════════════════════════════════════ */}
         <div className="px-5 pb-5 flex items-center justify-between gap-3">
           <span className="text-[12px] text-[#7A7568] font-semibold">
-            ⏱ {service.deliveryTime}
+            ⏱ {service.packages?.[0]?.deliveryTime || 'Contact us'}
           </span>
           
           {/* Chunky Arrow Button */}

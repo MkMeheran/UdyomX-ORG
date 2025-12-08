@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ArrowLeft, Save, Clock, X, Upload, HardDrive, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { calculateReadTime, generateUniqueSlug, getAllSlugs, extractHeadingsFromContent } from '@/lib/slug-utils';
+import { calculateReadTime, generateUniqueSlug, getSlugsByType, extractHeadingsFromContent, generateSlug, suggestAlternativeSlugs } from '@/lib/slug-utils';
 import { blogAPI } from '@/lib/api';
 import { Tabs, TabsList, TabsTrigger, TabsContent, Select, SelectOption, Label, Badge } from '@/components/ui/dashboard-components';
 import { SlugInput } from '@/components/dashboard/slug-input';
@@ -15,7 +15,9 @@ import { FAQEditor } from '@/components/dashboard/faq-editor';
 import { RecommendedEditor } from '@/components/dashboard/recommended-editor';
 import { ContentPreview } from '@/components/dashboard/content-preview';
 import { SEOEditor } from '@/components/dashboard/seo-editor';
-import type { PostEditorData, EditorTOCItem, SEOData } from '@/types/editor';
+import { uploadThumbnail } from '@/lib/supabase/storage';
+import type { PostEditorData, EditorTOCItem, SEOData, EditorMediaItem, EditorDownloadItem, EditorFAQItem, EditorRecommendedItem } from '@/types/editor';
+import type { GalleryItem, DownloadItem, FAQItem, RecommendedItem } from '@/types';
 
 // Default categories - can be extended by user
 const defaultCategories = ['Tutorial', 'Best Practices', 'Design', 'Development', 'Case Study', 'News', 'Opinion'];
@@ -67,6 +69,53 @@ const initialPostData: PostEditorData = {
     seoImage: ''
 };
 
+// Helper mappers to convert editor state into API-friendly structures
+function mapGalleryForSave(items: EditorMediaItem[] = []): GalleryItem[] {
+    return items.map((item, index) => ({
+        id: item.id,
+        url: item.url,
+        type: item.type,
+        alt: item.altText || undefined,
+        caption: item.caption,
+        thumbnail: item.thumbnailUrl,
+        order: item.orderIndex ?? index,
+    }));
+}
+
+function mapDownloadsForSave(items: EditorDownloadItem[] = []): DownloadItem[] {
+    return items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        url: item.url,
+        fileSize: item.fileSize,
+        fileType: item.fileType,
+        description: undefined,
+        isPremium: false,
+        downloadCount: undefined,
+    }));
+}
+
+function mapFAQsForSave(items: EditorFAQItem[] = []): FAQItem[] {
+    return items.map((item, index) => ({
+        id: item.id,
+        question: item.question,
+        answer: item.answer,
+        order: item.orderIndex ?? index,
+    }));
+}
+
+function mapRecommendedForSave(items: EditorRecommendedItem[] = []): RecommendedItem[] {
+    return items.map((item, index) => ({
+        id: item.id,
+        type: item.type === 'post' ? 'blog' : item.type,
+        title: item.slug || item.title || `Recommendation ${index + 1}`,
+        slug: item.slug,
+        url: undefined,
+        thumbnail: item.thumbnail,
+        excerpt: item.excerpt,
+    }));
+}
+
 interface PostEditorPageProps {
     postId?: string;
     initialData?: Partial<PostEditorData>;
@@ -100,6 +149,9 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
     
     // Cover image upload refs
     const coverImageInputRef = useRef<HTMLInputElement>(null);
+    const [coverUploadStatus, setCoverUploadStatus] = useState<{ uploading: boolean; message?: string; error?: string }>(
+        { uploading: false }
+    );
     
     const isEditing = !!postId;
     
@@ -118,11 +170,24 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
     
     // Auto-generate slug from title if empty
     useEffect(() => {
-        if (!data.slug && data.title) {
-            const existingSlugs = getAllSlugs('post');
-            const newSlug = generateUniqueSlug(data.title, existingSlugs);
-            setData(prev => ({ ...prev, slug: newSlug }));
-        }
+        if (!data.title || data.slug) return;
+
+        let isCancelled = false;
+        (async () => {
+            try {
+                const existingSlugs = await getSlugsByType('post');
+                const newSlug = await generateUniqueSlug(data.title, existingSlugs);
+                if (!isCancelled) {
+                    setData(prev => (prev.slug ? prev : { ...prev, slug: newSlug }));
+                }
+            } catch (error) {
+                console.error('Failed to auto-generate slug', error);
+            }
+        })();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [data.title, data.slug]);
     
     // Initialize TOC from content on mount (for existing posts)
@@ -184,22 +249,40 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
         }
     }, [categories, data.category]);
     
-    // Handle cover image upload from device
-    const handleCoverImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle cover image upload from device (Supabase storage)
+    const handleCoverImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const dataUrl = event.target?.result as string;
-                setData(prev => ({ ...prev, coverImage: dataUrl }));
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        setCoverUploadStatus({ uploading: true, message: `Uploading ${file.name}...` });
+
+        try {
+            const folderSlug = data.slug || (data.title ? generateSlug(data.title) : 'covers');
+            const result = await uploadThumbnail(file, `cover-images/${folderSlug}`);
+
+            if (!result.success || !result.url) {
+                throw new Error(result.error || 'Upload failed. Please try again.');
+            }
+
+            setData(prev => ({
+                ...prev,
+                coverImage: result.url,
+                coverImageAlt: prev.coverImageAlt || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' '),
+            }));
+
+            setCoverUploadStatus({ uploading: false, message: '✅ Uploaded to Supabase storage.' });
+        } catch (error: any) {
+            console.error('Cover upload failed:', error);
+            setCoverUploadStatus({
+                uploading: false,
+                error: error.message || 'Failed to upload cover image.',
+            });
+        } finally {
+            if (coverImageInputRef.current) {
+                coverImageInputRef.current.value = '';
+            }
         }
-        // Reset input
-        if (coverImageInputRef.current) {
-            coverImageInputRef.current.value = '';
-        }
-    }, []);
+    }, [data.slug, data.title]);
     
     // Handle cover image upload from Google Drive
     const handleCoverImageFromDrive = useCallback(() => {
@@ -225,18 +308,37 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
     const handleSave = useCallback(async () => {
         setIsSaving(true);
         try {
-            const postSlug = data.slug || `draft-${Date.now()}`;
+            // Validate required fields
+            if (!data.title) {
+                alert('❌ Please enter a title');
+                setIsSaving(false);
+                return;
+            }
+            
+            if (!data.slug) {
+                alert('❌ Please enter a slug');
+                setIsSaving(false);
+                return;
+            }
+            
+            const postSlug = data.slug;
             
             // Prepare data for saving
             const postData = {
                 ...data,
                 id: data.id || postSlug,
                 slug: postSlug,
+                status: data.status || 'published',
+                publishDate: data.publishDate || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 // Ensure content is saved
                 content: data.content || '',
                 // Ensure TOC is saved
                 toc: data.toc || [],
+                gallery: mapGalleryForSave(data.gallery),
+                downloads: mapDownloadsForSave(data.downloads),
+                faqs: mapFAQsForSave(data.faqs),
+                recommended: mapRecommendedForSave(data.recommended),
             };
             
             // Save using blogAPI (will use localStorage in development)
@@ -248,11 +350,39 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
             
             console.log('Post saved:', postData);
             
+            // Revalidate cache for this post and listing pages
+            try {
+                await fetch('/api/revalidate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        path: `/blog/${postSlug}`,
+                        type: 'post' 
+                    })
+                });
+            } catch (revalidateError) {
+                console.warn('Cache revalidation failed:', revalidateError);
+                // Don't fail the save if revalidation fails
+            }
+            
             setHasChanges(false);
             alert('✅ Post saved successfully!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving post:', error);
-            alert('Failed to save post. Please try again.');
+            
+            // Handle specific error cases
+            if (error?.code === '23505') {
+                // Duplicate slug error
+                const suggestions = await suggestAlternativeSlugs(data.slug, 'post');
+                const suggestionText = suggestions.length > 0 
+                    ? `\n\nSuggested alternatives:\n${suggestions.join('\n')}` 
+                    : '';
+                alert(`❌ Slug "${data.slug}" already exists.${suggestionText}\n\nPlease change the slug and try again.`);
+            } else if (error?.message) {
+                alert(`❌ Failed to save: ${error.message}`);
+            } else {
+                alert('❌ Failed to save post. Please try again.');
+            }
         } finally {
             setIsSaving(false);
         }
@@ -402,6 +532,17 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
                                             Upload from Drive
                                         </button>
                                     </div>
+                                    {coverUploadStatus.uploading && (
+                                        <p className="text-sm text-[#2C2416] font-medium mb-2">
+                                            {coverUploadStatus.message || 'Uploading...'}
+                                        </p>
+                                    )}
+                                    {!coverUploadStatus.uploading && coverUploadStatus.message && !coverUploadStatus.error && (
+                                        <p className="text-sm text-green-600 font-medium mb-2">{coverUploadStatus.message}</p>
+                                    )}
+                                    {coverUploadStatus.error && (
+                                        <p className="text-sm text-red-600 font-medium mb-2">{coverUploadStatus.error}</p>
+                                    )}
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
@@ -585,21 +726,6 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
                                     />
                                 </div>
                                 
-                                {/* Status */}
-                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
-                                    <Label>Status</Label>
-                                    <Select 
-                                        value={displayStatus}
-                                        onValueChange={(value) => updateField('status', value as PostEditorData['status'])}
-                                        className="mt-2"
-                                    >
-                                        <SelectOption value="draft">Draft</SelectOption>
-                                        <SelectOption value="published">Published</SelectOption>
-                                        <SelectOption value="scheduled">Scheduled</SelectOption>
-                                        <SelectOption value="archived">Archived</SelectOption>
-                                    </Select>
-                                </div>
-                                
                                 {/* Layout */}
                                 <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
                                     <Label>Layout</Label>
@@ -642,6 +768,21 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
                                         <span className="font-bold">{data.readTime}</span>
                                         <span className="text-xs">(auto-calculated)</span>
                                     </div>
+                                </div>
+                                
+                                {/* Status */}
+                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
+                                    <Label>Status</Label>
+                                    <Select 
+                                        value={displayStatus}
+                                        onValueChange={(value) => updateField('status', value as PostEditorData['status'])}
+                                        className="mt-2"
+                                    >
+                                        <SelectOption value="draft">Draft</SelectOption>
+                                        <SelectOption value="published">Published</SelectOption>
+                                        <SelectOption value="scheduled">Scheduled</SelectOption>
+                                        <SelectOption value="archived">Archived</SelectOption>
+                                    </Select>
                                 </div>
                             </div>
                         </div>

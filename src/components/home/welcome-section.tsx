@@ -4,17 +4,17 @@ import { Sparkles, Zap, Target } from "lucide-react";
 
 export function WelcomeSection() {
   return (
-    <div className="bg-[#1A1A1A] text-white border-4 border-black p-8 shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
+    <div className="bg-[#1A1A1A] text-white border-4 border-black p-4 md:p-8 shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
       <div className="border-l-4 border-[#2196F3] pl-6 relative">
         <div className="absolute -top-2 -left-2">
           <Sparkles className="w-8 h-8 text-[#FFC107]" />
         </div>
         
-        <h2 className="text-3xl md:text-4xl font-black mb-4 text-white">
+        <h2 className="text-3xl md:text-4xl font-black mb-2 md:mb-4 text-white">
           Welcome To UdyomX
         </h2>
 
-        <p className="text-[#E0E0E0] mb-4 leading-relaxed font-semibold">
+        <p className="text-[#E0E0E0] mb-2 md:mb-4 leading-relaxed font-semibold">
           <span className="font-black text-white">UdyomX</span> is a modern{" "}
           <span className="text-[#2196F3] font-black px-2 py-1 bg-[#2196F3]/20 border-2 border-[#2196F3]">
             full-stack
@@ -34,7 +34,7 @@ export function WelcomeSection() {
       </div>
 
       {/* Feature highlights */}
-      <div className="mt-8 grid sm:grid-cols-3 gap-4">
+      <div className="mt-4 md:mt-8 grid sm:grid-cols-3 gap-3 md:gap-4">
         <div className="bg-[#2196F3] border-3 border-black p-4 shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_rgba(0,0,0,1)] transition-all">
           <div className="w-12 h-12 bg-white border-3 border-black flex items-center justify-center mb-3">
             <Zap className="w-6 h-6 text-[#1A1A1A]" />
@@ -61,7 +61,7 @@ export function WelcomeSection() {
       </div>
 
       {/* Quote section */}
-      <div className="mt-8 pt-6 border-t-4 border-white">
+      <div className="mt-4 md:mt-8 pt-3 md:pt-6 border-t-4 border-white">
         <p className="text-[#E0E0E0] italic leading-relaxed font-semibold">
           &quot;I&apos;m excited to design, share, and bring your ideas to life. Together,
           let&apos;s build solutions that deliver bold, high-quality results with 

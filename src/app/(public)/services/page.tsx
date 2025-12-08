@@ -1,19 +1,30 @@
 import { serviceAPI } from '@/lib/api';
-import { ServiceCard } from '@/components/service-card';
-import { Wrench, Sparkles } from 'lucide-react';
+import { ContentListClient } from '@/components/content-list-client';
+import { Wrench } from 'lucide-react';
+
+// ISR: Regenerate page every 60 seconds
+export const revalidate = 60;
+
+// Fetch all services (server-side)
+async function getServicesForCards() {
+    try {
+        const services = await serviceAPI.getAll();
+        return services;
+    } catch (error) {
+        console.error('Error fetching services:', error);
+        return [];
+    }
+}
 
 export default async function ServicesPage() {
-    const services = await serviceAPI.getAll();
+    const allServices = await getServicesForCards();
 
     return (
-        <div className="min-h-screen bg-[#F5F5F0] py-12 px-4">
-            <div className="max-w-6xl mx-auto">
-                {/* ═══════════════════════════════════════════════════════════
-                    HERO HEADER - Chunky Brutalist Style
-                ═══════════════════════════════════════════════════════════ */}
+        <div className="min-h-screen bg-[#F5F5F0] py-6 md:py-12 px-3 md:px-4">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
                 <div className="mb-12">
-                    {/* Category Badge */}
-                    <div className="mb-6">
+                    <div>
                         <span
                             className="
                                 inline-flex items-center gap-2 px-4 py-2
@@ -27,69 +38,20 @@ export default async function ServicesPage() {
                             Services
                         </span>
                     </div>
-
-                    {/* Title */}
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#2C2416] mb-4 leading-[1.1]">
-                        <span className="relative inline-block">
-                            All Services
-                            <span 
-                                className="absolute -bottom-1 left-0 w-full h-3 bg-[#F5C542] -z-10"
-                                style={{ transform: 'skewX(-3deg)' }}
-                            />
-                        </span>
-                    </h1>
-
-                    {/* Subtitle */}
-                    <p className="text-lg md:text-xl text-[#5A5247] font-semibold flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-[#F5C542]" />
-                        Professional services tailored to your needs
-                    </p>
                 </div>
 
-                {/* ═══════════════════════════════════════════════════════════
-                    SERVICES GRID - Wider cards on desktop
-                ═══════════════════════════════════════════════════════════ */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
-                    {services.length > 0 ? (
-                        services.map((service, index) => (
-                            <div 
-                                key={service.id}
-                                className="animate-fade-in"
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                            >
-                                <ServiceCard service={service} index={index} />
-                            </div>
-                        ))
-                    ) : (
-                        <div className="col-span-full">
-                            <div
-                                className="
-                                    bg-[#F5F1E8] border-[4px] border-[#2C2416]
-                                    shadow-[6px_6px_0_0_rgba(44,36,22,0.3)]
-                                    p-16 text-center
-                                "
-                            >
-                                <div
-                                    className="
-                                        w-20 h-20 mx-auto mb-6
-                                        bg-[#2196F3] text-white
-                                        border-[4px] border-[#2C2416]
-                                        shadow-[4px_4px_0_0_#2C2416]
-                                        flex items-center justify-center
-                                    "
-                                >
-                                    <Wrench className="w-10 h-10" />
-                                </div>
-                                <p className="text-[#2C2416] text-xl font-black mb-2">
-                                    No services available
-                                </p>
-                                <p className="text-[#7A7568] font-medium">
-                                    Check back soon for new offerings!
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                {/* Client-side content list with search, filter, and load-more */}
+                <ContentListClient
+                    contentType="service"
+                    initialItems={allServices}
+                    categories={[
+                        'All Categories',
+                        'Web Development',
+                        'Design',
+                        'Consulting',
+                        'Marketing',
+                    ]}
+                />
             </div>
         </div>
     );

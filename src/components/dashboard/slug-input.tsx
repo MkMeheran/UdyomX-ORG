@@ -4,12 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Check, X, AlertTriangle, RefreshCw, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
-    generateSlugFromTitle, 
     generateUniqueSlug, 
     isValidSlug, 
     checkSlugAvailability,
     suggestAlternativeSlugs,
-    getAllSlugs
+    getSlugsByType
 } from '@/lib/slug-utils';
 
 interface SlugInputProps {
@@ -41,16 +40,18 @@ export function SlugInput({
     useEffect(() => {
         if (!value) {
             setValidation(null);
+            setIsChecking(false);
             return;
         }
         
         // First validate format
-        const formatCheck = isValidSlug(value);
-        if (!formatCheck.valid) {
+        const formatValid = isValidSlug(value);
+        if (!formatValid) {
             setValidation({
                 valid: false,
-                message: formatCheck.message
+                message: 'Only lowercase letters, numbers, and hyphens are allowed.'
             });
+            setIsChecking(false);
             return;
         }
         
@@ -58,38 +59,63 @@ export function SlugInput({
         setIsChecking(true);
         
         // Simulate async check (in real app, this would be an API call)
+        let cancelled = false;
         const timer = setTimeout(() => {
-            const availability = checkSlugAvailability(value, type, excludeId);
-            
-            if (availability.available) {
-                setValidation({
-                    valid: true,
-                    available: true,
-                    message: 'Slug is available!'
-                });
-            } else {
-                const suggestions = suggestAlternativeSlugs(value, type);
-                setValidation({
-                    valid: false,
-                    available: false,
-                    message: `Already used by "${availability.conflictingTitle}"`,
-                    suggestions
-                });
-            }
-            
-            setIsChecking(false);
+            (async () => {
+                try {
+                    const availability = await checkSlugAvailability(value, type, excludeId);
+                    if (cancelled) return;
+                    if (availability.available) {
+                        setValidation({
+                            valid: true,
+                            available: true,
+                            message: 'Slug is available!'
+                        });
+                    } else {
+                        const suggestions = await suggestAlternativeSlugs(value, type);
+                        if (cancelled) return;
+                        setValidation({
+                            valid: false,
+                            available: false,
+                            message: availability.message || 'Slug already exists.',
+                            suggestions,
+                        });
+                    }
+                } catch (error) {
+                    console.error('Slug availability check failed', error);
+                    if (!cancelled) {
+                        setValidation({
+                            valid: false,
+                            message: 'Could not verify slug. Please try again.'
+                        });
+                    }
+                } finally {
+                    if (!cancelled) {
+                        setIsChecking(false);
+                    }
+                }
+            })();
         }, 300);
         
-        return () => clearTimeout(timer);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [value, type, excludeId]);
     
     // Auto-generate slug from title
     const generateFromTitle = useCallback(() => {
         if (!title) return;
-        
-        const existingSlugs = getAllSlugs(type);
-        const newSlug = generateUniqueSlug(title, existingSlugs);
-        onChange(newSlug);
+
+        (async () => {
+            try {
+                const existingSlugs = await getSlugsByType(type);
+                const newSlug = await generateUniqueSlug(title, existingSlugs);
+                onChange(newSlug);
+            } catch (error) {
+                console.error('Failed to auto-generate slug', error);
+            }
+        })();
     }, [title, type, onChange]);
     
     // Handle input change

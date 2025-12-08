@@ -73,7 +73,7 @@ export const seoAPI = {
   // ═══════════════════════════════════════════════════════════════════════════
   // CREATE OR UPDATE SEO (Upsert)
   // ═══════════════════════════════════════════════════════════════════════════
-  async upsert(seo: SEOData, parentId: string, parentType: ParentType): Promise<SEOData> {
+  async upsert(parentId: string, parentType: ParentType, seo: SEOData): Promise<SEOData> {
     const dbData = toDbType(seo, parentId, parentType);
     
     // Check if exists

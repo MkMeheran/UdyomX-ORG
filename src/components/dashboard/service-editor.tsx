@@ -2,11 +2,12 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Plus, Trash2, GripVertical, Star, ChevronDown, ChevronUp, Upload, HardDrive } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, GripVertical, Star, ChevronDown, ChevronUp, Upload, HardDrive, DollarSign, Check } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { generateId, generateUniqueSlug, getAllSlugs } from '@/lib/slug-utils';
+import { generateId, generateUniqueSlug, getSlugsByType, generateSlug } from '@/lib/slug-utils';
 import { serviceAPI } from '@/lib/api';
+import { uploadThumbnail } from '@/lib/supabase/storage';
 import { Tabs, TabsList, TabsTrigger, TabsContent, Select, SelectOption, Switch, Label, Badge } from '@/components/ui/dashboard-components';
 import { SlugInput } from '@/components/dashboard/slug-input';
 import { ContentEditor } from '@/components/dashboard/content-editor';
@@ -17,8 +18,17 @@ import { RecommendedEditor } from '@/components/dashboard/recommended-editor';
 import { ContentPreview } from '@/components/dashboard/content-preview';
 import type { ServiceEditorData, ServiceFeatureEditor, ServicePackageEditor, ServiceProblemEditor, ServiceSolutionEditor, TestimonialEditor, ContentFormat, EditorTOCItem } from '@/types/editor';
 
-// Lucide icons list for features
-const featureIcons = ['Smartphone', 'Search', 'Zap', 'Shield', 'Code', 'Headphones', 'Users', 'Layout', 'Paintbrush', 'MousePointer', 'Book', 'Building', 'Layers', 'FileCode', 'TrendingUp', 'Star', 'Heart', 'Globe', 'Settings', 'Check'];
+// Lucide icons list for features - expanded for better variety
+const featureIcons = [
+    'Smartphone', 'Search', 'Zap', 'Shield', 'Code', 'Headphones', 'Users', 'Layout', 
+    'Paintbrush', 'MousePointer', 'Book', 'Building', 'Layers', 'FileCode', 'TrendingUp', 
+    'Star', 'Heart', 'Globe', 'Settings', 'Check', 'Rocket', 'Target', 'Award', 'Clock',
+    'Lock', 'Unlock', 'Database', 'Server', 'Cloud', 'Wifi', 'Mail', 'MessageSquare',
+    'Phone', 'Video', 'Camera', 'Image', 'File', 'Folder', 'Download', 'Upload',
+    'RefreshCw', 'RotateCw', 'Maximize', 'Minimize', 'Edit', 'Trash', 'Copy', 'Clipboard',
+    'Link', 'ExternalLink', 'Share', 'Package', 'Box', 'Archive', 'ShoppingCart', 'CreditCard',
+    'DollarSign', 'TrendingDown', 'BarChart', 'PieChart', 'Activity', 'Cpu', 'HardDrive', 'Monitor'
+];
 
 // Initial empty service data
 const initialServiceData: ServiceEditorData = {
@@ -74,19 +84,45 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
     // Safe display values
     const displayStatus = data.status || 'draft';
     
-    // Handle image upload from device (syncs both thumbnail and coverImage)
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Upload status state
+    const [coverUploadStatus, setCoverUploadStatus] = useState<{
+        uploading: boolean;
+        message?: string;
+        error?: string;
+    }>({ uploading: false });
+    
+    // Handle image upload from device (Supabase storage - syncs both thumbnail and coverImage)
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const url = event.target?.result as string;
-                // Set both thumbnail and coverImage to same value
-                setData(prev => ({ ...prev, thumbnail: url, coverImage: url }));
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        setCoverUploadStatus({ uploading: true, message: `Uploading ${file.name}...` });
+
+        try {
+            const folderSlug = data.slug || (data.title ? generateSlug(data.title) : 'service-covers');
+            const result = await uploadThumbnail(file, `service-covers/${folderSlug}`);
+
+            if (!result.success || !result.url) {
+                throw new Error(result.error || 'Upload failed. Please try again.');
+            }
+
+            // Set both thumbnail and coverImage to same value
+            setData(prev => ({
+                ...prev,
+                thumbnail: result.url,
+                coverImage: result.url,
+            }));
+
+            setCoverUploadStatus({ uploading: false, message: '✅ Uploaded to Supabase storage.' });
+        } catch (error: any) {
+            console.error('Cover upload failed:', error);
+            setCoverUploadStatus({
+                uploading: false,
+                error: error.message || 'Failed to upload cover image.',
+            });
+        } finally {
+            e.target.value = '';
         }
-        e.target.value = '';
     };
     
     // Handle image from Google Drive (syncs both thumbnail and coverImage)
@@ -116,13 +152,60 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
         setHasChanges(true);
     }, [data]);
     
+    // Auto-populate SEO fields when key fields change
+    useEffect(() => {
+        setData(prev => {
+            const updates: Partial<ServiceEditorData> = {};
+            
+            // Auto-populate ogImage from thumbnail if empty
+            if (prev.thumbnail && !prev.ogImage && !prev.seoImage) {
+                updates.ogImage = prev.thumbnail;
+                updates.seoImage = prev.thumbnail;
+            }
+            
+            // Auto-populate ogTitle from seoTitle or title if empty
+            if (!prev.ogTitle && (prev.seoTitle || prev.title)) {
+                updates.ogTitle = prev.seoTitle || prev.title;
+            }
+            
+            // Auto-populate ogDescription from seoDescription or hookLine if empty
+            if (!prev.ogDescription && (prev.seoDescription || prev.hookLine)) {
+                updates.ogDescription = prev.seoDescription || prev.hookLine;
+            }
+            
+            // Auto-set twitterCard default if empty
+            if (!prev.twitterCard) {
+                updates.twitterCard = 'summary_large_image';
+            }
+            
+            // Only update if there are changes
+            if (Object.keys(updates).length > 0) {
+                return { ...prev, ...updates };
+            }
+            return prev;
+        });
+    }, [data.thumbnail, data.title, data.seoTitle, data.hookLine, data.seoDescription]);
+    
     // Auto-generate slug from title if empty
     useEffect(() => {
-        if (!data.slug && data.title) {
-            const existingSlugs = getAllSlugs('service');
-            const newSlug = generateUniqueSlug(data.title, existingSlugs);
-            setData(prev => ({ ...prev, slug: newSlug }));
-        }
+        if (!data.title || data.slug) return;
+
+        let isCancelled = false;
+        (async () => {
+            try {
+                const existingSlugs = await getSlugsByType('service');
+                const newSlug = await generateUniqueSlug(data.title, existingSlugs);
+                if (!isCancelled) {
+                    setData(prev => (prev.slug ? prev : { ...prev, slug: newSlug }));
+                }
+            } catch (error) {
+                console.error('Failed to auto-generate service slug', error);
+            }
+        })();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [data.title, data.slug]);
     
     // Update field
@@ -173,6 +256,7 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
     }, [data.packages, updateField]);
     
     const updatePackage = useCallback((id: string, updates: Partial<ServicePackageEditor>) => {
+        console.log('📦 updatePackage:', id, updates);
         updateField('packages', data.packages.map(p => 
             p.id === id ? { ...p, ...updates } : p
         ));
@@ -295,7 +379,7 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                     title: p.title,
                     price: p.price,
                     discountPrice: p.discountPrice,
-                    features: p.features,
+                    features: p.features.filter(Boolean),
                     deliveryTime: p.deliveryTime,
                     revisions: p.revisions,
                     isPopular: p.isPopular,
@@ -324,8 +408,8 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                     orderIndex: idx
                 })),
                 downloads: data.downloads.map((d, idx) => ({
-                    fileUrl: d.fileUrl,
-                    label: d.label,
+                    fileUrl: d.url,
+                    label: d.title,
                     fileSize: d.fileSize,
                     fileType: d.fileType,
                     orderIndex: idx
@@ -344,12 +428,28 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                 await serviceAPI.create(servicePayload);
             }
             
+            // Revalidate cache for this service and listing pages
+            try {
+                await fetch('/api/revalidate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        path: `/services/${data.slug}`,
+                        type: 'service' 
+                    })
+                });
+            } catch (revalidateError) {
+                console.warn('Cache revalidation failed:', revalidateError);
+            }
+            
             setHasChanges(false);
             alert('Service saved successfully!');
             router.push('/dashboard/admin/services');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving service:', error);
-            alert('Failed to save service: ' + (error instanceof Error ? error.message : 'Unknown error'));
+            const errorMessage = error?.details || error?.message || 'Unknown error';
+            const errorCode = error?.code ? ` (Code: ${error.code})` : '';
+            alert(`Failed to save service: ${errorMessage}${errorCode}\n\nCheck console for more details.`);
         } finally {
             setIsSaving(false);
         }
@@ -466,7 +566,8 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                                         <button
                                             type="button"
                                             onClick={() => thumbnailInputRef.current?.click()}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-[#2C2416] font-bold text-xs hover:bg-[#F5C542] transition-all"
+                                            disabled={coverUploadStatus.uploading}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-[#2C2416] font-bold text-xs hover:bg-[#F5C542] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <Upload className="w-3 h-3" />
                                             Upload from Device
@@ -474,12 +575,31 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                                         <button
                                             type="button"
                                             onClick={handleImageFromDrive}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-[#2C2416] font-bold text-xs hover:bg-[#F5C542] transition-all"
+                                            disabled={coverUploadStatus.uploading}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-[#2C2416] font-bold text-xs hover:bg-[#F5C542] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <HardDrive className="w-3 h-3" />
                                             Google Drive
                                         </button>
                                     </div>
+                                    
+                                    {/* Upload Status Messages */}
+                                    {coverUploadStatus.uploading && (
+                                        <p className="text-xs text-blue-600 mb-2 font-medium">
+                                            {coverUploadStatus.message}
+                                        </p>
+                                    )}
+                                    {!coverUploadStatus.uploading && coverUploadStatus.message && (
+                                        <p className="text-xs text-green-600 mb-2 font-medium">
+                                            {coverUploadStatus.message}
+                                        </p>
+                                    )}
+                                    {coverUploadStatus.error && (
+                                        <p className="text-xs text-red-600 mb-2 font-medium">
+                                            {coverUploadStatus.error}
+                                        </p>
+                                    )}
+                                    
                                     <input
                                         ref={thumbnailInputRef}
                                         type="file"
@@ -519,20 +639,6 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                                     </Select>
                                 </div>
                                 
-                                {/* Status */}
-                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
-                                    <Label>Status</Label>
-                                    <Select 
-                                        value={data.status}
-                                        onValueChange={(value) => updateField('status', value as ServiceEditorData['status'])}
-                                        className="mt-2"
-                                    >
-                                        <SelectOption value="draft">Draft</SelectOption>
-                                        <SelectOption value="published">Published</SelectOption>
-                                        <SelectOption value="archived">Archived</SelectOption>
-                                    </Select>
-                                </div>
-                                
                                 {/* Display Options */}
                                 <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)] space-y-4">
                                     <div className="flex items-center justify-between">
@@ -560,6 +666,20 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                                         onChange={(e) => updateField('publishDate', e.target.value)}
                                         className="w-full px-4 py-3 mt-2 border-4 border-[#2C2416] bg-[#F5F1E8] focus:outline-none"
                                     />
+                                </div>
+                                
+                                {/* Status */}
+                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
+                                    <Label>Status</Label>
+                                    <Select 
+                                        value={data.status}
+                                        onValueChange={(value) => updateField('status', value as ServiceEditorData['status'])}
+                                        className="mt-2"
+                                    >
+                                        <SelectOption value="draft">Draft</SelectOption>
+                                        <SelectOption value="published">Published</SelectOption>
+                                        <SelectOption value="archived">Archived</SelectOption>
+                                    </Select>
                                 </div>
                             </div>
                         </div>
@@ -685,53 +805,77 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                             </div>
                             
                             <div className="space-y-4">
-                                {data.features.map((feature, idx) => (
-                                    <div key={feature.id} className="p-4 bg-[#F5F1E8] border-4 border-[#2C2416]/30">
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div>
-                                                <label className="text-xs font-bold text-[#2C2416]/60">Icon</label>
-                                                <Select
-                                                    value={feature.icon}
-                                                    onValueChange={(value) => updateFeature(feature.id, { icon: value })}
-                                                    className="mt-1"
-                                                >
-                                                    {featureIcons.map(icon => (
-                                                        <SelectOption key={icon} value={icon}>{icon}</SelectOption>
-                                                    ))}
-                                                </Select>
+                                {data.features.map((feature, idx) => {
+                                    const IconComponent = require('lucide-react')[feature.icon];
+                                    return (
+                                        <div key={feature.id} className="p-4 bg-[#F5F1E8] border-4 border-[#2C2416]/30 relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeFeature(feature.id)}
+                                                className="absolute top-3 right-3 p-2 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                                title="Remove feature"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-3">
+                                                <div className="md:col-span-1">
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-2 block">Icon Preview</label>
+                                                    <div className="w-16 h-16 bg-white border-2 border-[#2C2416] flex items-center justify-center">
+                                                        {IconComponent && <IconComponent className="w-8 h-8 text-[#2C2416]" strokeWidth={2.5} />}
+                                                    </div>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-2 block">Select Icon</label>
+                                                    <Select
+                                                        value={feature.icon}
+                                                        onValueChange={(value) => updateFeature(feature.id, { icon: value })}
+                                                    >
+                                                        {featureIcons.map(icon => {
+                                                            const Icon = require('lucide-react')[icon];
+                                                            return (
+                                                                <SelectOption key={icon} value={icon}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {Icon && <Icon className="w-4 h-4" />}
+                                                                        <span>{icon}</span>
+                                                                    </div>
+                                                                </SelectOption>
+                                                            );
+                                                        })}
+                                                    </Select>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-2 block">Title</label>
+                                                    <input
+                                                        type="text"
+                                                        value={feature.title}
+                                                        onChange={(e) => updateFeature(feature.id, { title: e.target.value })}
+                                                        placeholder="Feature title..."
+                                                        className="w-full px-3 py-2 border-2 border-[#2C2416] bg-white text-sm focus:outline-none focus:border-[#F5C542]"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="md:col-span-2">
-                                                <label className="text-xs font-bold text-[#2C2416]/60">Title</label>
-                                                <input
-                                                    type="text"
-                                                    value={feature.title}
-                                                    onChange={(e) => updateFeature(feature.id, { title: e.target.value })}
-                                                    placeholder="Feature title..."
-                                                    className="w-full px-3 py-2 mt-1 border-2 border-[#2C2416] bg-white text-sm focus:outline-none"
+                                            <div>
+                                                <label className="text-xs font-bold text-[#2C2416]/60 mb-2 block">
+                                                    Description <span className="text-[10px] font-normal text-[#2C2416]/40">(Press Shift+Enter for new line)</span>
+                                                </label>
+                                                <textarea
+                                                    value={feature.description}
+                                                    onChange={(e) => updateFeature(feature.id, { description: e.target.value })}
+                                                    onKeyDown={(e) => {
+                                                        // Allow Shift+Enter for new lines
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    placeholder="Feature description... (Press Shift+Enter for multiple lines)"
+                                                    rows={3}
+                                                    className="w-full px-3 py-2 border-2 border-[#2C2416] bg-white text-sm resize-y focus:outline-none focus:border-[#F5C542]"
                                                 />
                                             </div>
-                                            <div className="flex items-end">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeFeature(feature.id)}
-                                                    className="px-3 py-2 text-red-500 border-2 border-red-500 hover:bg-red-50"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
                                         </div>
-                                        <div className="mt-3">
-                                            <label className="text-xs font-bold text-[#2C2416]/60">Description</label>
-                                            <textarea
-                                                value={feature.description}
-                                                onChange={(e) => updateFeature(feature.id, { description: e.target.value })}
-                                                placeholder="Feature description..."
-                                                rows={2}
-                                                className="w-full px-3 py-2 mt-1 border-2 border-[#2C2416] bg-white text-sm resize-none focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </TabsContent>
@@ -740,102 +884,144 @@ export function ServiceEditorPage({ serviceId, initialData }: ServiceEditorPageP
                     <TabsContent value="packages">
                         <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-black text-[#2C2416]">Packages ({data.packages.length})</h3>
+                                <div>
+                                    <h3 className="text-lg font-black text-[#2C2416]">Service Packages ({data.packages.length})</h3>
+                                    <p className="text-xs text-[#2C2416]/60 mt-1">Create different pricing tiers for your service</p>
+                                </div>
                                 <button
                                     type="button"
                                     onClick={addPackage}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#F5C542] border-4 border-[#2C2416] font-bold text-sm hover:shadow-[4px_4px_0_rgba(44,36,22,0.3)]"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#F5C542] border-4 border-[#2C2416] font-bold text-sm hover:shadow-[4px_4px_0_rgba(44,36,22,0.3)] transition-all"
                                 >
                                     <Plus className="w-4 h-4" />
                                     Add Package
                                 </button>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {data.packages.map((pkg) => (
+                            <div className="space-y-6">
+                                {data.packages.map((pkg, idx) => (
                                     <div key={pkg.id} className={cn(
-                                        'p-4 border-4',
-                                        pkg.isPopular ? 'border-[#F5C542] bg-[#F5C542]/10' : 'border-[#2C2416]/30 bg-[#F5F1E8]'
+                                        'p-6 border-4 rounded-lg relative transition-all',
+                                        pkg.isPopular 
+                                            ? 'border-[#F5C542] bg-gradient-to-br from-[#F5C542]/10 to-[#F5C542]/5 shadow-lg' 
+                                            : 'border-[#2C2416]/30 bg-[#F5F1E8]'
                                     )}>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <input
-                                                type="text"
-                                                value={pkg.title}
-                                                onChange={(e) => updatePackage(pkg.id, { title: e.target.value })}
-                                                placeholder="Package name..."
-                                                className="font-bold text-lg bg-transparent border-b-2 border-[#2C2416]/30 focus:outline-none focus:border-[#2C2416]"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removePackage(pkg.id)}
-                                                className="text-red-500 hover:bg-red-50 p-1"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-2 gap-2 mb-3">
-                                            <div>
-                                                <label className="text-xs font-bold text-[#2C2416]/60">Price ($)</label>
-                                                <input
-                                                    type="number"
-                                                    value={pkg.price}
-                                                    onChange={(e) => updatePackage(pkg.id, { price: parseInt(e.target.value) || 0 })}
-                                                    className="w-full px-2 py-1 border-2 border-[#2C2416] bg-white text-sm"
-                                                />
+                                        {/* Popular Badge */}
+                                        {pkg.isPopular && (
+                                            <div className="absolute -top-3 left-6">
+                                                <span className="px-3 py-1 bg-[#F5C542] border-2 border-[#2C2416] text-[#2C2416] text-xs font-black uppercase shadow-md">
+                                                    ⭐ Popular
+                                                </span>
                                             </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-[#2C2416]/60">Discount ($)</label>
-                                                <input
-                                                    type="number"
-                                                    value={pkg.discountPrice || ''}
-                                                    onChange={(e) => updatePackage(pkg.id, { discountPrice: parseInt(e.target.value) || undefined })}
-                                                    placeholder="Optional"
-                                                    className="w-full px-2 py-1 border-2 border-[#2C2416] bg-white text-sm"
-                                                />
-                                            </div>
-                                        </div>
+                                        )}
                                         
-                                        <div className="grid grid-cols-2 gap-2 mb-3">
-                                            <div>
-                                                <label className="text-xs font-bold text-[#2C2416]/60">Delivery</label>
+                                        {/* Header */}
+                                        <div className="flex items-start justify-between mb-4 gap-4">
+                                            <div className="flex-1">
+                                                <label className="text-xs font-bold text-[#2C2416]/60 mb-1 block">Package Name</label>
                                                 <input
                                                     type="text"
-                                                    value={pkg.deliveryTime}
-                                                    onChange={(e) => updatePackage(pkg.id, { deliveryTime: e.target.value })}
-                                                    placeholder="e.g., 2-3 weeks"
-                                                    className="w-full px-2 py-1 border-2 border-[#2C2416] bg-white text-sm"
+                                                    value={pkg.title}
+                                                    onChange={(e) => updatePackage(pkg.id, { title: e.target.value })}
+                                                    placeholder="e.g., Basic, Standard, Premium"
+                                                    className="w-full font-bold text-xl bg-transparent border-b-3 border-[#2C2416] focus:outline-none focus:border-[#F5C542] transition-colors px-2 py-1"
                                                 />
                                             </div>
-                                            <div>
-                                                <label className="text-xs font-bold text-[#2C2416]/60">Revisions</label>
-                                                <input
-                                                    type="number"
-                                                    value={pkg.revisions}
-                                                    onChange={(e) => updatePackage(pkg.id, { revisions: parseInt(e.target.value) || 1 })}
-                                                    min={1}
-                                                    className="w-full px-2 py-1 border-2 border-[#2C2416] bg-white text-sm"
-                                                />
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updatePackage(pkg.id, { isPopular: !pkg.isPopular })}
+                                                    className={cn(
+                                                        "p-2 border-2 transition-colors rounded",
+                                                        pkg.isPopular 
+                                                            ? "bg-[#F5C542] border-[#2C2416] text-[#2C2416]" 
+                                                            : "bg-white border-[#2C2416]/30 text-[#2C2416]/50 hover:border-[#F5C542]"
+                                                    )}
+                                                    title="Mark as popular"
+                                                >
+                                                    <Star className="w-5 h-5" fill={pkg.isPopular ? "currentColor" : "none"} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePackage(pkg.id)}
+                                                    className="p-2 text-red-600 hover:bg-red-100 border-2 border-red-300 hover:border-red-500 rounded transition-colors"
+                                                    title="Remove package"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
                                             </div>
                                         </div>
                                         
-                                        <div className="mb-3">
-                                            <label className="text-xs font-bold text-[#2C2416]/60">Features (one per line)</label>
+                                        {/* Pricing Section */}
+                                        <div className="bg-white/50 p-4 rounded border-2 border-[#2C2416]/20 mb-4">
+                                            <h4 className="text-sm font-black text-[#2C2416] mb-3 flex items-center gap-2">
+                                                <DollarSign className="w-4 h-4" />
+                                                Pricing & Delivery
+                                            </h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                <div>
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-1 block">Price ($)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={pkg.price}
+                                                        onChange={(e) => updatePackage(pkg.id, { price: parseInt(e.target.value) || 0 })}
+                                                        className="w-full px-3 py-2 border-2 border-[#2C2416] bg-white text-sm font-bold focus:outline-none focus:border-[#F5C542]"
+                                                        placeholder="499"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-1 block">Discount ($)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={pkg.discountPrice ?? ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            updatePackage(pkg.id, { 
+                                                                discountPrice: val === '' ? undefined : parseInt(val) || 0 
+                                                            });
+                                                        }}
+                                                        placeholder="Optional"
+                                                        className="w-full px-3 py-2 border-2 border-[#2C2416] bg-white text-sm focus:outline-none focus:border-[#F5C542]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-1 block">Delivery Time</label>
+                                                    <input
+                                                        type="text"
+                                                        value={pkg.deliveryTime}
+                                                        onChange={(e) => updatePackage(pkg.id, { deliveryTime: e.target.value })}
+                                                        placeholder="2-3 weeks"
+                                                        className="w-full px-3 py-2 border-2 border-[#2C2416] bg-white text-sm focus:outline-none focus:border-[#F5C542]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-bold text-[#2C2416]/60 mb-1 block">Revisions</label>
+                                                    <input
+                                                        type="number"
+                                                        value={pkg.revisions}
+                                                        onChange={(e) => updatePackage(pkg.id, { revisions: parseInt(e.target.value) || 1 })}
+                                                        min={1}
+                                                        className="w-full px-3 py-2 border-2 border-[#2C2416] bg-white text-sm focus:outline-none focus:border-[#F5C542]"
+                                                        placeholder="3"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Features Section */}
+                                        <div>
+                                            <label className="text-sm font-black text-[#2C2416] mb-2 flex items-center gap-2">
+                                                <Check className="w-4 h-4" />
+                                                Package Features <span className="text-xs font-normal text-[#2C2416]/40">(one per line, Shift+Enter for new line)</span>
+                                            </label>
                                             <textarea
                                                 value={pkg.features.join('\n')}
-                                                onChange={(e) => updatePackage(pkg.id, { features: e.target.value.split('\n').filter(Boolean) })}
-                                                placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                                                rows={4}
-                                                className="w-full px-2 py-1 border-2 border-[#2C2416] bg-white text-sm resize-none"
+                                                onChange={(e) => updatePackage(pkg.id, { features: e.target.value.split('\n') })}
+                                                placeholder="✓ Responsive design&#10;✓ 5 pages included&#10;✓ SEO optimization&#10;✓ 3 revisions"
+                                                rows={6}
+                                                className="w-full px-4 py-3 border-2 border-[#2C2416] bg-white text-sm resize-y focus:outline-none focus:border-[#F5C542] font-mono leading-relaxed"
                                             />
-                                        </div>
-                                        
-                                        <div className="flex items-center gap-2">
-                                            <Switch
-                                                checked={pkg.isPopular}
-                                                onCheckedChange={(checked) => updatePackage(pkg.id, { isPopular: checked })}
-                                            />
-                                            <span className="text-sm font-medium">Popular</span>
+                                            <p className="text-xs text-[#2C2416]/50 mt-1">💡 Tip: Start each feature with ✓ or • for better presentation</p>
                                         </div>
                                     </div>
                                 ))}

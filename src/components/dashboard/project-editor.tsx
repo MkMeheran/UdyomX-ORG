@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, Save, Plus, Trash2, GripVertical, Upload, HardDrive } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { generateUniqueSlug, getAllSlugs, extractHeadingsFromContent } from '@/lib/slug-utils';
+import { generateUniqueSlug, getSlugsByType, extractHeadingsFromContent } from '@/lib/slug-utils';
 import { projectAPI } from '@/lib/api';
 import { Tabs, TabsList, TabsTrigger, TabsContent, Select, SelectOption, Switch, Label, Badge } from '@/components/ui/dashboard-components';
 import { SlugInput } from '@/components/dashboard/slug-input';
@@ -77,6 +77,7 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
         ...initialProjectData,
         ...initialData,
         status: initialData?.status || 'draft',
+        techStack: initialData?.techStack || [],
         gallery: initialData?.gallery || [],
         downloads: initialData?.downloads || [],
         faqs: initialData?.faqs || [],
@@ -132,11 +133,24 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
     
     // Auto-generate slug from name if empty
     useEffect(() => {
-        if (!data.slug && data.name) {
-            const existingSlugs = getAllSlugs('project');
-            const newSlug = generateUniqueSlug(data.name, existingSlugs);
-            setData(prev => ({ ...prev, slug: newSlug }));
-        }
+        if (!data.name || data.slug) return;
+
+        let isCancelled = false;
+        (async () => {
+            try {
+                const existingSlugs = await getSlugsByType('project');
+                const newSlug = await generateUniqueSlug(data.name, existingSlugs);
+                if (!isCancelled) {
+                    setData(prev => (prev.slug ? prev : { ...prev, slug: newSlug }));
+                }
+            } catch (error) {
+                console.error('Failed to auto-generate project slug', error);
+            }
+        })();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [data.name, data.slug]);
     
     // Initialize TOC from content on mount (for existing projects)
@@ -203,6 +217,20 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
             }
             
             console.log('Project saved:', projectData);
+            
+            // Revalidate cache for this project and listing pages
+            try {
+                await fetch('/api/revalidate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        path: `/projects/${projectSlug}`,
+                        type: 'project' 
+                    })
+                });
+            } catch (revalidateError) {
+                console.warn('Cache revalidation failed:', revalidateError);
+            }
             
             setHasChanges(false);
             alert('✅ Project saved successfully!');
@@ -448,6 +476,40 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
                                     </Select>
                                 </div>
                                 
+                                {/* Featured */}
+                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
+                                    <div className="flex items-center justify-between">
+                                        <Label>Featured Project</Label>
+                                        <Switch
+                                            checked={data.featured}
+                                            onCheckedChange={(checked) => updateField('featured', checked)}
+                                        />
+                                    </div>
+                                </div>
+                                
+                                {/* Publish Date */}
+                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
+                                    <Label>Publish Date</Label>
+                                    <input
+                                        type="date"
+                                        value={data.publishDate}
+                                        onChange={(e) => updateField('publishDate', e.target.value)}
+                                        className="w-full px-4 py-3 mt-2 border-4 border-[#2C2416] bg-[#F5F1E8] focus:outline-none"
+                                    />
+                                </div>
+                                
+                                {/* Client Info */}
+                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
+                                    <Label>Client Info</Label>
+                                    <input
+                                        type="text"
+                                        value={data.clientInfo || ''}
+                                        onChange={(e) => updateField('clientInfo', e.target.value)}
+                                        placeholder="Client name (optional)..."
+                                        className="w-full px-4 py-3 mt-2 border-4 border-[#2C2416] bg-[#F5F1E8] focus:outline-none"
+                                    />
+                                </div>
+                                
                                 {/* Status */}
                                 <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
                                     <Label>Publication Status</Label>
@@ -490,40 +552,6 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
                                         />
                                     </div>
                                 )}
-                                
-                                {/* Featured */}
-                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
-                                    <div className="flex items-center justify-between">
-                                        <Label>Featured Project</Label>
-                                        <Switch
-                                            checked={data.featured}
-                                            onCheckedChange={(checked) => updateField('featured', checked)}
-                                        />
-                                    </div>
-                                </div>
-                                
-                                {/* Publish Date */}
-                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
-                                    <Label>Publish Date</Label>
-                                    <input
-                                        type="date"
-                                        value={data.publishDate}
-                                        onChange={(e) => updateField('publishDate', e.target.value)}
-                                        className="w-full px-4 py-3 mt-2 border-4 border-[#2C2416] bg-[#F5F1E8] focus:outline-none"
-                                    />
-                                </div>
-                                
-                                {/* Client Info */}
-                                <div className="bg-white border-4 border-[#2C2416] p-6 shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
-                                    <Label>Client Info</Label>
-                                    <input
-                                        type="text"
-                                        value={data.clientInfo || ''}
-                                        onChange={(e) => updateField('clientInfo', e.target.value)}
-                                        placeholder="Client name (optional)..."
-                                        className="w-full px-4 py-3 mt-2 border-4 border-[#2C2416] bg-[#F5F1E8] focus:outline-none"
-                                    />
-                                </div>
                             </div>
                         </div>
                     </TabsContent>
@@ -596,7 +624,7 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
                                 thumbnail: data.thumbnail,
                                 publishDate: data.publishDate,
                                 category: data.category,
-                                tags: data.techStack,
+                                tags: data.seo?.secondaryKeywords || [],
                                 faqs: data.faqs,
                                 gallery: data.gallery,
                                 downloads: data.downloads,

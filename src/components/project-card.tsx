@@ -113,16 +113,22 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
           ═══════════════════════════════════════════════════════════ */}
           <div className="pt-5 border-t-[4px] border-[#2C2416]">
             {/* Date */}
-            <div className="flex items-center gap-2 text-[13px] text-[#7A7267] font-bold mb-4">
-              <Calendar className="w-4 h-4" />
-              <span>
-                {new Date(project.publishDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
+            {project.publishDate && (() => {
+              const date = new Date(project.publishDate);
+              const isValidDate = !isNaN(date.getTime());
+              return isValidDate ? (
+                <div className="flex items-center gap-2 text-[13px] text-[#7A7267] font-bold mb-4">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    {date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              ) : null;
+            })()}
 
             <div className="flex items-center justify-between">
               {/* Status Badge */}

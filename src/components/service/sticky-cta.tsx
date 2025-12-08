@@ -51,10 +51,10 @@ export function StickyCTA({ packages, onCheckout }: StickyCTAProps) {
                 paddingBottom: 'env(safe-area-inset-bottom)',
             }}
         >
-            <div className="max-w-6xl mx-auto px-4 py-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="max-w-6xl mx-auto px-2 md:px-4 py-3 md:py-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
                     {/* Package Selector */}
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-2 md:gap-4 flex-1 w-full sm:w-auto">
                         <select
                             value={selectedPackage?.id || ''}
                             onChange={(e) => {
@@ -62,13 +62,14 @@ export function StickyCTA({ packages, onCheckout }: StickyCTAProps) {
                                 setSelectedPackage(pkg || null);
                             }}
                             className="
-                                px-4 py-2.5
+                                w-full sm:w-auto px-3 md:px-4 py-2 md:py-2.5
                                 bg-[#F5F1E8] text-[#2C2416]
                                 border-[3px] border-[#F5C542]
                                 shadow-[3px_3px_0_0_#F5C542]
-                                font-bold text-[14px]
+                                font-bold text-[12px] md:text-[14px]
                                 focus:outline-none focus:ring-0
                                 cursor-pointer
+                                truncate
                             "
                         >
                             {packages.map((pkg) => (
@@ -97,11 +98,11 @@ export function StickyCTA({ packages, onCheckout }: StickyCTAProps) {
                     <button
                         onClick={() => selectedPackage && onCheckout?.(selectedPackage)}
                         className="
-                            w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2
+                            w-full sm:w-auto px-6 md:px-8 py-2.5 md:py-3 flex items-center justify-center gap-2
                             bg-[#F5C542] text-[#2C2416]
-                            border-[4px] border-[#F5F1E8]
-                            shadow-[4px_4px_0_0_#F5F1E8]
-                            font-black text-[14px] uppercase tracking-wider
+                            border-[3px] md:border-[4px] border-[#F5F1E8]
+                            shadow-[3px_3px_0_0_#F5F1E8] md:shadow-[4px_4px_0_0_#F5F1E8]
+                            font-black text-[12px] md:text-[14px] uppercase tracking-wider
                             hover:shadow-[2px_2px_0_0_#F5F1E8]
                             hover:translate-x-[2px] hover:translate-y-[2px]
                             active:shadow-none active:translate-x-[4px] active:translate-y-[4px]
@@ -109,7 +110,7 @@ export function StickyCTA({ packages, onCheckout }: StickyCTAProps) {
                         "
                     >
                         <span>Get Started</span>
-                        <ArrowRight className="w-5 h-5" strokeWidth={3} />
+                        <ArrowRight className="w-4 h-4 md:w-5 md:h-5" strokeWidth={3} />
                     </button>
                 </div>
             </div>

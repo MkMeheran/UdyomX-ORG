@@ -1,70 +1,131 @@
 'use client';
 
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Sparkles, Zap, Rocket, Palette, Code, Terminal } from 'lucide-react';
 import Link from 'next/link';
+import { Space_Grotesk } from 'next/font/google';
+
+const spaceGrotesk = Space_Grotesk({ 
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '600', '700']
+});
 
 export function CTASection() {
     const features = [
-        { text: 'Multimedia platform control', icon: '🎨' },
-        { text: 'Workflow builder usage', icon: '⚡' },
-        { text: 'Access to all services', icon: '🚀' },
+        { text: 'Multimedia Control', icon: <Palette className="w-6 h-6 text-[#2196F3]" /> },
+        { text: 'Workflow Builder', icon: <Zap className="w-6 h-6 text-[#F5C542]" /> },
+        { text: 'Full Access', icon: <Rocket className="w-6 h-6 text-[#FF6B6B]" /> },
+        { text: 'Clean Code', icon: <Code className="w-6 h-6 text-[#5CB85C]" /> },
+        { text: 'CLI Support', icon: <Terminal className="w-6 h-6 text-[#2196F3]" /> },
+        // Duplicates for seamless loop
+        { text: 'Multimedia Control', icon: <Palette className="w-6 h-6 text-[#2196F3]" /> },
+        { text: 'Workflow Builder', icon: <Zap className="w-6 h-6 text-[#F5C542]" /> },
+        { text: 'Full Access', icon: <Rocket className="w-6 h-6 text-[#FF6B6B]" /> },
+        { text: 'Clean Code', icon: <Code className="w-6 h-6 text-[#5CB85C]" /> },
+        { text: 'CLI Support', icon: <Terminal className="w-6 h-6 text-[#2196F3]" /> },
     ];
 
     return (
-        <div className="bg-[#1A1A1A] border-4 border-black p-8 md:p-10 text-white shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 border-3 border-white bg-[#FF6B6B] flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-white" />
+        <div className={`relative overflow-hidden p-4 md:p-12 border-t-4 border-[#2C2416] group ${spaceGrotesk.className} bg-[#F5F1E8]`}>
+            {/* Light Theme Background Pattern */}
+            <div className="absolute inset-0 bg-[radial-gradient(#2C2416_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.05]" />
+            
+            {/* Animated Glow Orbs - Adjusted for Light Theme */}
+            <div className="absolute top-0 left-1/4 w-64 h-64 bg-[#2196F3]/20 rounded-full blur-[80px] animate-pulse mix-blend-multiply" />
+            <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#FF6B6B]/20 rounded-full blur-[80px] animate-pulse delay-1000 mix-blend-multiply" />
+
+            <div className="relative z-10 flex flex-col items-center text-center">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border-2 border-[#2C2416] text-[#2C2416] mb-3 md:mb-6 shadow-[4px_4px_0_0_#2C2416]">
+                    <Sparkles className="w-4 h-4 animate-pulse text-[#FF6B6B]" />
+                    <span className="text-xs font-bold tracking-[0.2em] uppercase">System Online</span>
                 </div>
-                <span className="px-4 py-1.5 bg-[#FF6B6B] text-white text-xs font-black border-2 border-white uppercase tracking-wider">
-                    Get Started
-                </span>
-            </div>
 
-            <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight uppercase">
-                Unlock Your{' '}
-                <span className="text-[#F5C542]">
-                    Creative Power
-                </span>
-            </h2>
+                {/* Glitch Title - High Contrast Brand Colors */}
+                <h2 className="text-4xl md:text-6xl font-black mb-3 md:mb-6 leading-tight tracking-tight text-[#2C2416]">
+                    UNLOCK YOUR{' '}
+                    <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#2196F3] via-[#FF6B6B] to-[#F5C542] animate-gradient-x drop-shadow-[2px_2px_0_rgba(44,36,22,1)]">
+                        CREATIVE POWER
+                    </span>
+                </h2>
 
-            <p className="text-[#E0E0E0] mb-8 text-lg leading-relaxed max-w-2xl font-semibold">
-                Transform from maker to creator. Get access to all services, 
-                fast support, and custom solutions for your needs.
-            </p>
+                <p className="text-[#2C2416]/80 mb-6 md:mb-12 text-lg md:text-xl leading-relaxed max-w-2xl font-bold">
+                    Transform from maker to creator. Access the <span className="text-[#2196F3] font-black bg-[#2196F3]/10 px-2 rounded">next-gen</span> ecosystem with high-performance tools.
+                </p>
 
-            <div className="grid sm:grid-cols-3 gap-4 mb-8">
-                {features.map((feature, index) => (
-                    <div 
-                        key={index} 
-                        className="flex items-start gap-3 bg-white border-3 border-black p-4 shadow-[4px_4px_0_0_rgba(0,0,0,1)]"
-                    >
-                        <div className="text-2xl">{feature.icon}</div>
-                        <div className="flex-1">
-                            <div className="w-7 h-7 border-2 border-black bg-[#5CB85C] flex items-center justify-center mb-2">
-                                <Check className="w-4 h-4 text-white" />
+                {/* Infinite Carousel */}
+                <div className="w-full max-w-5xl mb-6 md:mb-12 overflow-hidden mask-linear-gradient-light">
+                    <div className="flex gap-6 animate-scroll hover:pause">
+                        {features.map((feature, index) => (
+                            <div 
+                                key={index} 
+                                className="flex-shrink-0 w-64 bg-white border-2 border-[#2C2416] p-4 shadow-[4px_4px_0_0_#2C2416] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#2C2416] transition-all duration-300 group/card"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 rounded-lg bg-[#F5F1E8] border border-[#2C2416] group-hover/card:bg-[#2196F3]/10 transition-colors">
+                                        {feature.icon}
+                                    </div>
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-[#2C2416] font-bold text-sm">
+                                            {feature.text}
+                                        </span>
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <div className="w-2 h-2 rounded-full bg-[#5CB85C] border border-[#2C2416] animate-pulse" />
+                                            <span className="text-[10px] text-[#2C2416]/60 uppercase tracking-wider font-bold">Active</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <span className="text-[#1A1A1A] text-sm font-bold">{feature.text}</span>
-                        </div>
+                        ))}
                     </div>
-                ))}
+                </div>
+
+                {/* Cyber Buttons - Brand Colors */}
+                <div className="flex flex-col sm:flex-row gap-6 w-full max-w-lg">
+                    <Link
+                        href="/services"
+                        className="relative flex-1 group overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-[#2196F3] border-2 border-[#2C2416] shadow-[4px_4px_0_0_#2C2416] transition-all duration-300 group-hover:translate-x-[2px] group-hover:translate-y-[2px] group-hover:shadow-[2px_2px_0_0_#2C2416]" />
+                        <div className="relative px-8 py-4 flex items-center justify-center gap-3 text-white font-black uppercase tracking-widest">
+                            <Sparkles className="w-5 h-5" />
+                            <span>Explore Plans</span>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href="/projects"
+                        className="relative flex-1 group overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-white border-2 border-[#2C2416] shadow-[4px_4px_0_0_#2C2416] transition-all duration-300 group-hover:translate-x-[2px] group-hover:translate-y-[2px] group-hover:shadow-[2px_2px_0_0_#2C2416]" />
+                        <div className="relative px-8 py-4 flex items-center justify-center gap-3 text-[#2C2416] font-black uppercase tracking-widest">
+                            <span>View Projects</span>
+                            <div className="w-2 h-2 bg-[#FF6B6B] rounded-full border border-[#2C2416] group-hover:animate-ping" />
+                        </div>
+                    </Link>
+                </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                    href="/services"
-                    className="flex-1 py-4 bg-[#2196F3] text-white font-black text-center border-3 border-white shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_rgba(255,255,255,1)] transition-all flex items-center justify-center gap-2 group uppercase tracking-wider"
-                >
-                    <Sparkles className="w-5 h-5" />
-                    Explore Plans
-                </Link>
-                <Link
-                    href="/projects"
-                    className="flex-1 py-4 bg-white text-[#1A1A1A] font-black text-center border-3 border-white shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_rgba(255,255,255,1)] transition-all uppercase tracking-wider"
-                >
-                    View Projects
-                </Link>
-            </div>
+            <style jsx>{`
+                @keyframes scroll {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-scroll {
+                    animation: scroll 20s linear infinite;
+                }
+                .pause:hover {
+                    animation-play-state: paused;
+                }
+                .mask-linear-gradient-light {
+                    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+                }
+                @keyframes shine {
+                    100% { transform: translateX(100%); }
+                }
+                .animate-shine {
+                    animation: shine 0.5s;
+                }
+            `}</style>
         </div>
     );
 }

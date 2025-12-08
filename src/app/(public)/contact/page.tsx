@@ -201,6 +201,21 @@ function ContactPageContent() {
                 >
                     {socialLinks.map((contact) => {
                         const IconComponent = iconComponents[contact.id];
+                        
+                        // Extract background color/gradient for inline style
+                        const getBgStyle = () => {
+                            if (contact.color.includes('gradient')) {
+                                // Instagram gradient: bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737]
+                                return { 
+                                    backgroundImage: 'linear-gradient(to bottom right, #833AB4, #FD1D1D, #F77737)'
+                                };
+                            }
+                            // Regular color: bg-[#25D366]
+                            return { 
+                                backgroundColor: contact.color.replace('bg-[', '').replace(']', '') 
+                            };
+                        };
+                        
                         return (
                             <motion.a
                                 key={contact.id}
@@ -208,9 +223,10 @@ function ContactPageContent() {
                                 href={contact.href}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                style={getBgStyle()}
                                 className={`
                                     group p-5 md:p-6
-                                    ${contact.color} ${contact.hoverColor}
+                                    ${contact.hoverColor}
                                     border-[4px] border-[#2C2416]
                                     shadow-[6px_6px_0_0_#2C2416]
                                     hover:shadow-[4px_4px_0_0_#2C2416]
@@ -235,9 +251,9 @@ function ContactPageContent() {
                                         <h3 className={`text-lg md:text-xl font-black ${contact.textColor}`}>
                                             {contact.name}
                                         </h3>
-                                        <ExternalLink className={`w-4 h-4 ${contact.textColor} opacity-60`} />
+                                        <ExternalLink className={`w-4 h-4 ${contact.textColor}`} />
                                     </div>
-                                    <p className={`${contact.textColor} opacity-80 font-medium text-sm`}>
+                                    <p className={`${contact.textColor} font-semibold text-sm opacity-90`}>
                                         {contact.description}
                                     </p>
                                 </div>
@@ -273,7 +289,7 @@ function ContactPageContent() {
                                         <h3 className="text-lg font-black text-[#F5F1E8]">
                                             Prefer Email?
                                         </h3>
-                                        <p className="text-[#A8A499] font-medium text-sm">
+                                        <p className="text-[#C8C3B8] font-semibold text-sm">
                                             For detailed project discussions
                                         </p>
                                     </div>
@@ -287,7 +303,7 @@ function ContactPageContent() {
                                         shadow-[3px_3px_0_0_#F5F1E8]
                                         hover:shadow-[2px_2px_0_0_#F5F1E8]
                                         hover:translate-x-[1px] hover:translate-y-[1px]
-                                        font-black text-sm uppercase tracking-wider
+                                        font-black text-sm lowercase tracking-wider
                                         transition-all duration-150
                                         flex items-center gap-2
                                     "

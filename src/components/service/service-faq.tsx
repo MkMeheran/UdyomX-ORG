@@ -15,8 +15,8 @@ export function ServiceFAQ({ faqs }: ServiceFAQProps) {
     if (!faqs || faqs.length === 0) return null;
 
     return (
-        <section className="py-10 md:py-14 bg-[#F5F5F0]">
-            <div className="max-w-5xl mx-auto px-4">
+        <section className="py-6 md:py-10 bg-[#F5F5F0]">
+            <div className="max-w-7xl mx-auto px-4">
                 {/* Section Header */}
                 <div className="flex items-center gap-3 mb-8">
                     <div
@@ -54,7 +54,7 @@ export function ServiceFAQ({ faqs }: ServiceFAQProps) {
                                     text-left hover:bg-[#F0EDE5] transition-colors
                                 "
                             >
-                                <span className="text-[15px] md:text-[16px] font-bold text-[#2C2416] leading-tight">
+                                <span className="flex-1 min-w-0 text-[16px] md:text-[18px] lg:text-[20px] font-bold text-[#2C2416] leading-tight break-words word-break">
                                     {faq.question}
                                 </span>
                                 <motion.div
@@ -81,7 +81,7 @@ export function ServiceFAQ({ faqs }: ServiceFAQProps) {
                                     >
                                         <div className="px-5 pb-5">
                                             <div className="pt-2 pl-0 border-l-[4px] border-[#D35400]">
-                                                <p className="text-[14px] text-[#5A5247] font-medium leading-relaxed pl-4">
+                                                <p className="text-[15px] md:text-[17px] lg:text-[18px] text-[#3D3530] font-semibold leading-relaxed pl-4 break-words overflow-wrap-anywhere">
                                                     {faq.answer}
                                                 </p>
                                             </div>

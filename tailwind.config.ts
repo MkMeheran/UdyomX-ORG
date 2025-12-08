@@ -70,6 +70,7 @@ const config: Config = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ['Merriweather', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'Consolas', 'monospace'],
+        heading: ['Noto Serif Ethiopic Condensed', 'Noto Serif', 'serif'],
       },
       fontSize: {
         xs: '12px',

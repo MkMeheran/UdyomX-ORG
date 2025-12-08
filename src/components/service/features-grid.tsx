@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import Icon from '@/components/common/Icon';
 import type { ServiceFeature } from '@/types/service';
 
 interface FeaturesGridProps {
@@ -37,8 +37,8 @@ export function FeaturesGrid({ features }: FeaturesGridProps) {
     ];
 
     return (
-        <section className="py-10 md:py-14 bg-[#F5F5F0]">
-            <div className="max-w-5xl mx-auto px-4">
+        <section className="py-6 md:py-10 bg-[#F5F5F0]">
+            <div className="max-w-7xl mx-auto px-4">
                 {/* Section Header */}
                 <div className="mb-8 text-center">
                     <h2 className="text-2xl md:text-3xl font-black text-[#2C2416] mb-2">
@@ -79,7 +79,7 @@ export function FeaturesGrid({ features }: FeaturesGridProps) {
                                     style={{ borderLeft: `5px solid ${accentColor}` }}
                                 >
                                     <div className="p-4 flex-1">
-                                        {/* Title with Check */}
+                                        {/* Title with Icon */}
                                         <div className="flex items-start gap-2 mb-2">
                                             <div
                                                 className="
@@ -89,7 +89,7 @@ export function FeaturesGrid({ features }: FeaturesGridProps) {
                                                 "
                                                 style={{ backgroundColor: accentColor }}
                                             >
-                                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                                <Icon name={feature.icon as any} size={12} className="text-white" style={{ strokeWidth: 3 }} />
                                             </div>
                                             <h3 className="text-[15px] font-black text-[#2C2416] leading-tight">
                                                 {feature.title}
@@ -97,7 +97,7 @@ export function FeaturesGrid({ features }: FeaturesGridProps) {
                                         </div>
 
                                         {/* Description */}
-                                        <p className="text-[13px] text-[#5A5247] font-medium leading-relaxed pl-7">
+                                        <p className="text-[13px] text-[#5A5247] font-medium leading-relaxed pl-7 break-words hyphens-auto" style={{overflowWrap: 'anywhere'}}>
                                             {feature.description}
                                         </p>
                                     </div>

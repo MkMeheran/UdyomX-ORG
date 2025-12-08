@@ -61,8 +61,8 @@ export function GalleryDownloads({ gallery = [], downloads = [], showGallery, sh
     };
 
     return (
-        <section className="py-10 md:py-14 bg-[#F0F0F3]">
-            <div className="max-w-5xl mx-auto px-4">
+        <section className="py-6 md:py-10 bg-[#F0F0F3]">
+            <div className="max-w-7xl mx-auto px-4">
                 {/* Gallery Section */}
                 {showGallery && gallery.length > 0 && (
                     <div className={showDownloads && downloads.length > 0 ? 'mb-12' : ''}>
