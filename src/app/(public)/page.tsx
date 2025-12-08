@@ -58,7 +58,35 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
     return (
-        <div className="min-h-screen bg-[#F5F5F0]">
+        <>
+            {/* JSON-LD Schema Markup */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(siteConfig.seo.structuredData),
+                }}
+            />
+            
+            {/* FAQ Schema Markup */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "FAQPage",
+                        mainEntity: siteConfig.seo.faq.map((item) => ({
+                            "@type": "Question",
+                            name: item.question,
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: item.answer,
+                            },
+                        })),
+                    }),
+                }}
+            />
+            
+            <div className="min-h-screen bg-[#F5F5F0]">
             <div className="max-w-7xl mx-auto px-2 md:px-4 py-3 md:py-12">
                 {/* Profile Card */}
                 <div>
@@ -88,5 +116,6 @@ export default function HomePage() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
