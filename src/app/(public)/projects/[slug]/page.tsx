@@ -86,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const robotsMeta = seo.robotsMeta || {};
 
     return {
-        title: `${effectiveTitle} | UdyomX Projects`,
+        title: effectiveTitle,
         description: effectiveDescription,
         keywords: keywords,
         authors: [{ name: 'UdyomX Team' }],

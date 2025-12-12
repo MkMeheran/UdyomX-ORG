@@ -127,7 +127,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     if (robotsMeta.maxImagePreview) robotsContent.push(`max-image-preview:${robotsMeta.maxImagePreview}`);
 
     return {
-        title: `${effectiveTitle} | UdyomX ORG`,
+        title: effectiveTitle,
         description: effectiveDescription,
         keywords: keywords,
         authors: post.author ? [{ name: post.author }] : [{ name: 'UdyomX Team' }],

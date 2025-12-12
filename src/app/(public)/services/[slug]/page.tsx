@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
     const ogImage = service.ogImage || service.seoImage || service.coverImage || service.thumbnail;
 
     return {
-        title: service.seoTitle || `${service.title} | Services`,
+        title: service.seoTitle || service.title,
         description: service.seoDescription || service.hookLine || service.title,
         keywords: service.seoKeywords?.join(', '),
         alternates: {
