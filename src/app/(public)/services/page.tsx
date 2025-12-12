@@ -1,9 +1,15 @@
 import { serviceAPI } from '@/lib/api';
 import { ContentListClient } from '@/components/content-list-client';
 import { Wrench } from 'lucide-react';
+import { Metadata } from 'next';
 
 // ISR: Regenerate page every 60 seconds
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+    title: 'Affordable Web Development, AI Agent & Digital Solutions | UdyomX ORG',
+    description: 'Professional web development, UI/UX design, automation, and digital solutions for businesses in Bangladesh. Static websites from $10.',
+};
 
 // Fetch all services (server-side)
 async function getServicesForCards() {

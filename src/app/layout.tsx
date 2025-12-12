@@ -28,14 +28,21 @@ const notoSerifEthiopic = Noto_Serif_Ethiopic({
 export const metadata: Metadata = {
   title: {
     default: "UdyomX ORG - Professional Web Development & Automation Services",
-    template: "%s | UdyomX ORG"
+    template: "%s"
   },
   description: "UdyomX ORG provides professional web development, automation solutions, and digital services. Built by Mokammel Morshed.",
   keywords: ["UdyomX", "web development", "automation", "Next.js", "React", "Supabase", "n8n", "Mokammel Morshed"],
   authors: [{ name: "Mokammel Morshed", url: "https://meheran-portfolio.vercel.app" }],
   creator: "Mokammel Morshed",
   publisher: "UdyomX ORG",
-  metadataBase: new URL("https://udyomxorg.vercel.app"),
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
+  },
+  metadataBase: new URL("https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app"),
   verification: {
     google: "YrHP8OmUd-mw2VtuRqXlV8jz0pRQ-IveTL1XbmCbpt4",
   },

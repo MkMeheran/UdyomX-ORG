@@ -1,9 +1,15 @@
 import { blogAPI } from '@/lib/api';
 import { ContentListClient } from '@/components/content-list-client';
 import { Newspaper } from 'lucide-react';
+import { Metadata } from 'next';
 
 // ISR: Regenerate page every 60 seconds
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+    title: 'Blog - Web Development Tips & Digital Solutions | UdyomX ORG',
+    description: 'Read our latest articles on web development, digital solutions, UI/UX design, and technology tips for businesses in Bangladesh.',
+};
 
 // Fetch all blog posts (server-side)
 async function getAllBlogPosts() {

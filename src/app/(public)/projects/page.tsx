@@ -1,9 +1,15 @@
 import { projectAPI } from "@/lib/api";
 import { ContentListClient } from "@/components/content-list-client";
 import { Briefcase } from "lucide-react";
+import { Metadata } from 'next';
 
 // ISR: Regenerate page every 60 seconds
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+    title: 'Our Projects - Web Development Portfolio | UdyomX ORG',
+    description: 'Explore our portfolio of web development projects, custom solutions, and digital products built for clients in Bangladesh.',
+};
 
 // Fetch all projects (server-side)
 async function getAllProjects() {

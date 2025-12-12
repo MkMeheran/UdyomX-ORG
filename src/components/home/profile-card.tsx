@@ -22,7 +22,7 @@ export function ProfileCard() {
         <div className="flex-1 w-full">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 mb-2 md:mb-3">
             <h1 className="text-3xl md:text-4xl font-black text-[#1A1A1A]">
-              UdyomX ORG
+              UdyomX ORG - Digital Solutions
             </h1>
             <span className="inline-flex items-center px-4 py-1.5 bg-[#F5C542] text-[#2C2416] text-xs font-black border-3 border-black shadow-[3px_3px_0_0_rgba(0,0,0,1)] w-fit uppercase tracking-wider">
               <Users className="w-3 h-3 mr-1.5" />

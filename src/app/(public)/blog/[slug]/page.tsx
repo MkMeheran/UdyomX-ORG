@@ -13,7 +13,7 @@ interface BlogPostPageProps {
 }
 
 // Site URL for canonical/OG URLs
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyomx.org';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app';
 
 // Generate JSON-LD structured data for the post
 function generateJsonLd(post: BlogPost) {
@@ -127,7 +127,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     if (robotsMeta.maxImagePreview) robotsContent.push(`max-image-preview:${robotsMeta.maxImagePreview}`);
 
     return {
-        title: `${effectiveTitle} | UdyomX Blog`,
+        title: `${effectiveTitle} | UdyomX ORG`,
         description: effectiveDescription,
         keywords: keywords,
         authors: post.author ? [{ name: post.author }] : [{ name: 'UdyomX Team' }],

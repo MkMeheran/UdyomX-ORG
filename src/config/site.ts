@@ -27,7 +27,7 @@ export const siteConfig = {
 
   // URLs & Links
   urls: {
-    website: "https://udyomxorg.vercel.app/",
+    website: "https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app/",
     github: "https://github.com/MkMeheran",
     twitter: "https://twitter.com/Meheran_3005", // Update with real Twitter handle
     linkedin: "https://www.linkedin.com/in/mokammel-morshed", // Update with real LinkedIn
@@ -44,8 +44,8 @@ export const siteConfig = {
 
   // SEO Configuration
   seo: {
-    title: "UdyomX ORG - Affordable Website Development & Digital Solutions in Bangladesh",
-    description: "UdyomX ORG provides affordable static and semi-dynamic website development, digital solutions, UI/UX, and full-stack development services. Perfect for small businesses and individuals looking for budget-friendly websites in Bangladesh.",
+    title: "Affordable Website Development & Digital Solutions in Bangladesh",
+    description: "Professional web development, UI/UX design, and digital solutions for small businesses in Bangladesh. Static & semi-dynamic websites starting from $10.",
     keywords: [
       "full-stack development",
       "web development",
@@ -76,7 +76,7 @@ export const siteConfig = {
     ],
     
     // Canonical URL
-    canonical: "https://udyomxorg.vercel.app",
+    canonical: "https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app",
     
     // Author & Publisher
     author: "Mokammel Morshed",
@@ -99,7 +99,7 @@ export const siteConfig = {
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: "https://udyomxorg.vercel.app",
+      url: "https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app",
       siteName: "UdyomX ORG",
       title: "UdyomX ORG - Affordable Website Development in Bangladesh",
       description: "Professional and affordable website development services for small businesses and individuals in Bangladesh.",
@@ -151,8 +151,8 @@ export const siteConfig = {
       "@context": "https://schema.org",
       "@type": "Organization",
       name: "UdyomX ORG",
-      url: "https://udyomxorg.vercel.app",
-      logo: "https://udyomxorg.vercel.app/logo.png",
+      url: "https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app",
+      logo: "https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app/logo.png",
       description: "Professional website development and digital solutions provider in Bangladesh",
       founder: {
         "@type": "Person",
