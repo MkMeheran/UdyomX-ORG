@@ -59,7 +59,48 @@ function detectFormat(content: string): 'html' | 'markdown' {
 export function ContentRenderer({ content, format = 'auto', className = '' }: ContentRendererProps) {
     const effectiveFormat = format === 'auto' ? detectFormat(content) : format;
     
-    const proseClasses = `
+    // Add IDs to headings for TOC navigation
+    const addHeadingIds = (htmlContent: string): string => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        
+        headings.forEach((heading, index) => {
+            if (!heading.id) {
+                const text = heading.textContent || '';
+                const id = text
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .trim() || `heading-${index}`;
+                heading.id = id;
+            }
+        });
+        
+        return doc.body.innerHTML;
+    };
+    
+    // For HTML content with custom styles, use minimal classes to avoid conflicts
+    const htmlClasses = `
+        max-w-none
+        [&>h1]:font-black [&>h1]:text-[#2C2416] [&>h1]:text-[32px] [&>h1]:mt-12 [&>h1]:mb-4 [&>h1]:scroll-mt-24
+        [&>h2]:font-black [&>h2]:text-[#2C2416] [&>h2]:text-[26px] [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:pb-3 [&>h2]:border-b-[3px] [&>h2]:border-[#2C2416] [&>h2]:scroll-mt-24
+        [&>h3]:font-black [&>h3]:text-[#2C2416] [&>h3]:text-[20px] [&>h3]:mt-8 [&>h3]:mb-3 [&>h3]:scroll-mt-24
+        [&>p]:text-[#5A5247] [&>p]:leading-[1.8] [&>p]:font-medium [&>p]:mb-4
+        [&>a]:text-[#2196F3] [&>a]:font-bold [&>a]:no-underline hover:[&>a]:text-[#D35400]
+        [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-4
+        [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-4
+        [&>li]:text-[#5A5247] [&>li]:font-medium [&>li]:mb-2
+        [&>img]:max-w-full [&>img]:h-auto
+        [&>pre]:bg-[#2C2416] [&>pre]:text-[#F5F1E8] [&>pre]:p-4 [&>pre]:overflow-x-auto [&>pre]:mb-4
+        [&>code]:text-[#D35400] [&>code]:font-mono
+        [&>blockquote]:border-l-[6px] [&>blockquote]:border-[#F5C542] [&>blockquote]:bg-[#E8E4DC] [&>blockquote]:p-6 [&>blockquote]:mb-4
+        ${className}
+    `.trim();
+    
+    // For Markdown content, use full prose classes
+    const markdownClasses = `
         prose prose-lg max-w-none
         prose-headings:font-black prose-headings:text-[#2C2416]
         prose-h2:text-[26px] prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-3 prose-h2:border-b-[3px] prose-h2:border-[#2C2416]
@@ -77,17 +118,18 @@ export function ContentRenderer({ content, format = 'auto', className = '' }: Co
     `.trim();
     
     if (effectiveFormat === 'html') {
+        const processedContent = typeof window !== 'undefined' ? addHeadingIds(content) : content;
         return (
             <div 
-                className={proseClasses}
-                dangerouslySetInnerHTML={{ __html: content }}
+                className={htmlClasses}
+                dangerouslySetInnerHTML={{ __html: processedContent }}
             />
         );
     }
     
     // Markdown rendering
     return (
-        <div className={proseClasses}>
+        <div className={markdownClasses}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw, rehypeHighlight]}

@@ -66,7 +66,7 @@ export default function DashboardProjectsPage() {
                 </div>
                 <Link
                     href="/dashboard/admin/projects/new"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-purple-500 text-white font-bold border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.3)] hover:shadow-[6px_6px_0_rgba(44,36,22,0.4)] hover:-translate-y-0.5 transition-all"
+                    className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-purple-500 text-white font-bold border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.3)] hover:shadow-[6px_6px_0_rgba(44,36,22,0.4)] hover:-translate-y-0.5 transition-all w-full sm:w-auto"
                 >
                     <Plus className="w-5 h-5" />
                     New Project
@@ -113,7 +113,7 @@ export default function DashboardProjectsPage() {
                     filteredProjects.map(project => (
                         <div 
                             key={project.id} 
-                            className="bg-white border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.2)] overflow-hidden group hover:shadow-[6px_6px_0_rgba(44,36,22,0.3)] transition-all"
+                            className="bg-white border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.2)] group hover:shadow-[6px_6px_0_rgba(44,36,22,0.3)] transition-all"
                         >
                             {/* Image */}
                             <div className="h-40 bg-[#F5F1E8] border-b-4 border-[#2C2416] overflow-hidden">
@@ -165,7 +165,7 @@ export default function DashboardProjectsPage() {
                                 </div>
                                 
                                 {/* Actions */}
-                                <div className="flex items-center gap-2 pt-3 border-t-2 border-[#2C2416]/10">
+                                <div className="flex items-center gap-2 pt-3 border-t-2 border-[#2C2416]/10 flex-wrap">
                                     <Link
                                         href={`/projects/${project.slug}`}
                                         className="p-2 bg-[#F5F1E8] border-2 border-[#2C2416] hover:bg-[#F5C542] transition-colors"

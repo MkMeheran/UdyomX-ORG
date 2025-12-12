@@ -246,11 +246,11 @@ export function ProjectEditorPage({ projectId, initialData }: ProjectEditorPageP
         <div className="min-h-screen bg-[#F5F1E8]">
             {/* Header */}
             <header className="sticky top-0 z-40 bg-[#F5F1E8] border-b-4 border-[#2C2416] shadow-[0_4px_0_rgba(44,36,22,0.2)]">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                         <div className="flex items-center gap-4">
                             <Link 
-                                href="/dashboard/projects"
+                                href="/dashboard/admin/projects"
                                 className="p-2 hover:bg-[#2C2416]/10 transition-colors"
                             >
                                 <ArrowLeft className="w-6 h-6" />

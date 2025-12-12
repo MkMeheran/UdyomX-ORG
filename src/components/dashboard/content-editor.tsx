@@ -370,11 +370,18 @@ export function ContentEditor({
                 {showPreview && (
                     <div 
                         className={cn(
-                            'p-4 bg-white border-4 border-[#2C2416] overflow-auto prose prose-sm max-w-none',
-                            'prose-headings:font-black prose-headings:text-[#2C2416]',
-                            'prose-p:text-[#2C2416]/80 prose-a:text-blue-600',
-                            'prose-code:bg-[#F5F1E8] prose-code:px-1 prose-code:rounded',
-                            'prose-blockquote:border-l-4 prose-blockquote:border-[#F5C542]'
+                            'p-4 bg-white border-4 border-[#2C2416] overflow-auto max-w-none',
+                            '[&>h1]:font-black [&>h1]:text-[#2C2416] [&>h1]:text-[32px] [&>h1]:mt-8 [&>h1]:mb-4',
+                            '[&>h2]:font-black [&>h2]:text-[#2C2416] [&>h2]:text-[26px] [&>h2]:mt-8 [&>h2]:mb-4 [&>h2]:pb-3 [&>h2]:border-b-[3px] [&>h2]:border-[#2C2416]',
+                            '[&>h3]:font-black [&>h3]:text-[#2C2416] [&>h3]:text-[20px] [&>h3]:mt-6 [&>h3]:mb-3',
+                            '[&>p]:text-[#5A5247] [&>p]:leading-[1.8] [&>p]:font-medium [&>p]:mb-4',
+                            '[&>a]:text-[#2196F3] [&>a]:font-bold [&>a]:no-underline hover:[&>a]:text-[#D35400]',
+                            '[&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-4',
+                            '[&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-4',
+                            '[&>li]:text-[#5A5247] [&>li]:font-medium [&>li]:mb-2',
+                            '[&>pre]:bg-[#2C2416] [&>pre]:text-[#F5F1E8] [&>pre]:p-4 [&>pre]:overflow-x-auto [&>pre]:mb-4',
+                            '[&>code]:text-[#D35400] [&>code]:bg-[#F5F1E8] [&>code]:px-1 [&>code]:font-mono',
+                            '[&>blockquote]:border-l-4 [&>blockquote]:border-[#F5C542] [&>blockquote]:bg-[#E8E4DC] [&>blockquote]:p-4 [&>blockquote]:mb-4'
                         )}
                         style={{ minHeight }}
                         dangerouslySetInnerHTML={{ __html: previewHtml || '<p class="text-gray-400">Preview will appear here...</p>' }}

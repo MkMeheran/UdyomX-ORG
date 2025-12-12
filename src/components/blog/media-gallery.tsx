@@ -159,15 +159,15 @@ export function MediaGallery({ images: rawImages, title = "Gallery" }: MediaGall
           {title}
         </h3>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {images.slice(0, 4).map((item, index) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {images.slice(0, 6).map((item, index) => (
             <div key={item.id} className="group relative">
               <button
                 onClick={() => {
                   setCurrentIndex(index);
                   setIsOpen(true);
                 }}
-                className="w-full aspect-square relative border-[3px] border-[#2C2416] shadow-[4px_4px_0_0_#2C2416] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#2C2416] transition-all bg-white overflow-hidden"
+                className="w-full aspect-[4/3] relative border-[3px] border-[#2C2416] shadow-[4px_4px_0_0_#2C2416] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#2C2416] transition-all bg-white overflow-hidden"
               >
                 <Image
                   src={item.thumbnail || item.url}

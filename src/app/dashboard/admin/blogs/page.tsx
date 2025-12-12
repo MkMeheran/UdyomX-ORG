@@ -73,7 +73,7 @@ export default function DashboardBlogsPage() {
                 </div>
                 <Link
                     href="/dashboard/admin/blogs/new"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white font-bold border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.3)] hover:shadow-[6px_6px_0_rgba(44,36,22,0.4)] hover:-translate-y-0.5 transition-all"
+                    className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-blue-500 text-white font-bold border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.3)] hover:shadow-[6px_6px_0_rgba(44,36,22,0.4)] hover:-translate-y-0.5 transition-all w-full sm:w-auto"
                 >
                     <Plus className="w-5 h-5" />
                     New Post
@@ -124,7 +124,7 @@ export default function DashboardBlogsPage() {
             </div>
             
             {/* Blog List */}
-            <div className="bg-white border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.2)] overflow-hidden">
+            <div className="bg-white border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.2)]">
                 {/* Table Header */}
                 <div className="hidden lg:grid lg:grid-cols-12 gap-4 p-4 bg-[#F5F1E8] border-b-4 border-[#2C2416] font-bold text-[#2C2416]">
                     <div className="col-span-5">Title</div>
@@ -144,10 +144,10 @@ export default function DashboardBlogsPage() {
                     ) : (
                         filteredBlogs.map(blog => (
                             <div key={blog.id} className="p-4 hover:bg-[#F5F1E8]/50 transition-colors">
-                                <div className="lg:grid lg:grid-cols-12 lg:gap-4 lg:items-center">
+                                <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-4 lg:items-center">
                                     {/* Title & Thumbnail */}
-                                    <div className="col-span-5 flex items-center gap-3 mb-3 lg:mb-0">
-                                        <div className="w-14 h-14 bg-[#F5F1E8] border-2 border-[#2C2416] flex-shrink-0 overflow-hidden">
+                                    <div className="lg:col-span-5 flex items-center gap-3 mb-3 lg:mb-0">
+                                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#F5F1E8] border-2 border-[#2C2416] flex-shrink-0 overflow-hidden">
                                             {blog.thumbnail && (
                                                 <img src={blog.thumbnail} alt="" className="w-full h-full object-cover" />
                                             )}
@@ -159,7 +159,7 @@ export default function DashboardBlogsPage() {
                                     </div>
                                     
                                     {/* Category */}
-                                    <div className="col-span-2 mb-2 lg:mb-0">
+                                    <div className="lg:col-span-2 mb-2 lg:mb-0">
                                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#F5C542] border-2 border-[#2C2416] text-xs font-bold">
                                             <Tag className="w-3 h-3" />
                                             {blog.category}
@@ -167,7 +167,7 @@ export default function DashboardBlogsPage() {
                                     </div>
                                     
                                     {/* Status */}
-                                    <div className="col-span-2 mb-2 lg:mb-0">
+                                    <div className="lg:col-span-2 mb-2 lg:mb-0">
                                         <span className={`inline-block px-2 py-1 text-xs font-bold border-2 ${
                                             blog.status === 'published' 
                                                 ? 'bg-green-100 border-green-500 text-green-700' 
@@ -178,7 +178,7 @@ export default function DashboardBlogsPage() {
                                     </div>
                                     
                                     {/* Date */}
-                                    <div className="col-span-2 mb-3 lg:mb-0">
+                                    <div className="lg:col-span-2 mb-3 lg:mb-0">
                                         <span className="flex items-center gap-1 text-sm text-[#2C2416]/60">
                                             <Clock className="w-4 h-4" />
                                             {blog.publishDate}
@@ -186,7 +186,7 @@ export default function DashboardBlogsPage() {
                                     </div>
                                     
                                     {/* Actions */}
-                                    <div className="col-span-1 flex items-center gap-2">
+                                    <div className="lg:col-span-1 flex items-center gap-2 flex-wrap">
                                         <Link
                                             href={`/blog/${blog.slug}`}
                                             className="p-2 bg-[#F5F1E8] border-2 border-[#2C2416] hover:bg-[#F5C542] transition-colors"

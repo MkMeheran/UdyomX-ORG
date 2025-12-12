@@ -124,7 +124,7 @@ export default function DashboardServicesPage() {
                         filteredServices.map(service => (
                             <div 
                                 key={service.id} 
-                                className="bg-white border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.2)] overflow-hidden group hover:shadow-[6px_6px_0_rgba(44,36,22,0.3)] transition-all"
+                                className="bg-white border-4 border-[#2C2416] shadow-[4px_4px_0_rgba(44,36,22,0.2)] group hover:shadow-[6px_6px_0_rgba(44,36,22,0.3)] transition-all"
                             >
                                 {/* Image */}
                                 <div className="h-40 bg-[#F5F1E8] border-b-4 border-[#2C2416] overflow-hidden relative">
@@ -168,7 +168,7 @@ export default function DashboardServicesPage() {
                                     )}
                                     
                                     {/* Actions */}
-                                    <div className="flex items-center gap-2 pt-3 border-t-2 border-[#2C2416]/10">
+                                    <div className="flex items-center gap-2 pt-3 border-t-2 border-[#2C2416]/10 flex-wrap">
                                         <Link
                                             href={`/services/${service.slug}`}
                                             className="p-2 bg-[#F5F1E8] border-2 border-[#2C2416] hover:bg-[#F5C542] transition-colors"
