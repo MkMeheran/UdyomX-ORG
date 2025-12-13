@@ -6,6 +6,7 @@ import { MDXRenderer } from '@/components/common/MDXRenderer';
 import { PostMeta } from '../PostMeta';
 import { PostAuthors } from '../PostAuthors';
 import { PostRecommended } from '../PostRecommended';
+import { MediaLightbox } from '@/components/common/MediaLightbox';
 import type { Post, BusinessInfo } from '@/types/post';
 
 interface StandardPostLayoutProps {
@@ -87,6 +88,9 @@ export function StandardPostLayout({ post, businessInfo }: StandardPostLayoutPro
                     <PostRecommended content={post.recommended} />
                 )}
             </div>
+
+            {/* Media Lightbox */}
+            <MediaLightbox trigger=".lightbox-trigger" />
         </article>
     );
 }

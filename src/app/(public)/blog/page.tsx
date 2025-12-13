@@ -24,6 +24,13 @@ async function getAllBlogPosts() {
 
 export default async function BlogPage() {
     const allPosts = await getAllBlogPosts();
+    
+    // Extract unique categories from posts
+    const categories = ['All Categories', ...Array.from(new Set(
+        allPosts
+            .map(post => post.category)
+            .filter(Boolean)
+    )).sort()];
 
     return (
         <div className="min-h-screen bg-[#F5F5F0] py-6 md:py-12 px-3 md:px-4">
@@ -42,13 +49,7 @@ export default async function BlogPage() {
                 <ContentListClient
                     contentType="post"
                     initialItems={allPosts}
-                    categories={[
-                        'All Categories',
-                        'Tutorial',
-                        'Best Practices',
-                        'Design',
-                        'Development',
-                    ]}
+                    categories={categories}
                 />
             </div>
         </div>

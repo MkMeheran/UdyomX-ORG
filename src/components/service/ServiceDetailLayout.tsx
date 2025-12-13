@@ -11,6 +11,7 @@ import { ServiceFAQ } from './service-faq';
 import { MediaGallery } from '@/components/blog/media-gallery';
 import { StickyCTA } from './sticky-cta';
 import { MDXRenderer } from '@/components/common/MDXRenderer';
+import { MediaLightbox } from '@/components/common/MediaLightbox';
 import type { ServiceFull } from '@/types/service';
 import type { Project, FAQ, GalleryItem } from '@/types';
 
@@ -291,6 +292,9 @@ export function ServiceDetailLayout({ service, relatedProjects = [] }: ServiceDe
 
             {/* Bottom padding for sticky CTA */}
             <div className="h-20" />
+
+            {/* Media Lightbox */}
+            <MediaLightbox trigger=".lightbox-trigger" />
         </div>
     );
 }

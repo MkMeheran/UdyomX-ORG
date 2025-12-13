@@ -23,8 +23,9 @@ export function generateSlug(text: string): string {
     .trim();
 }
 
-export function calculateReadTime(content: string): number {
+export function calculateReadTime(content: string): string {
   const wordsPerMinute = 200;
   const words = content.trim().split(/\s+/).length;
-  return Math.ceil(words / wordsPerMinute);
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `${minutes} min`;
 }

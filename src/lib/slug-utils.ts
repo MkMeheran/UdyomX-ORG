@@ -91,11 +91,12 @@ export async function getSlugsByType(type: 'post' | 'project' | 'service'): Prom
 }
 
 // Calculate read time from content
-export function calculateReadTime(content: string): number {
+export function calculateReadTime(content: string): string {
     const wordsPerMinute = 200;
     const text = content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
     const wordCount = text.split(/\s+/).filter(Boolean).length;
-    return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+    const minutes = Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+    return `${minutes} min`;
 }
 
 // Extract headings from content for TOC

@@ -8,6 +8,7 @@ import { RecommendedContent } from "@/components/blog/recommended-content";
 import { DownloadSection } from "@/components/blog/download-section";
 import { FAQSection } from "@/components/blog/faq-section";
 import { ContentRenderer } from "@/components/common/ContentRenderer";
+import { MediaLightbox } from "@/components/common/MediaLightbox";
 
 interface ProjectDetailLayoutProps {
   project: Project;
@@ -394,6 +395,9 @@ export function ProjectDetailLayout({ project }: ProjectDetailLayoutProps) {
           )}
         </div>
       </div>
+
+      {/* Media Lightbox */}
+      <MediaLightbox trigger=".lightbox-trigger" />
     </div>
   );
 }

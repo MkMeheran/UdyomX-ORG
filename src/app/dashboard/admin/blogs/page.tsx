@@ -29,8 +29,8 @@ export default function DashboardBlogsPage() {
     }, []);
     
     const categories = useMemo(() => {
-        const cats = new Set(blogs.map(b => b.category));
-        return Array.from(cats);
+        const cats = new Set(blogs.map(b => b.category).filter(Boolean));
+        return ['all', ...Array.from(cats).sort()];
     }, [blogs]);
     
     const filteredBlogs = useMemo(() => {
@@ -103,9 +103,10 @@ export default function DashboardBlogsPage() {
                             onChange={(e) => setCategoryFilter(e.target.value)}
                             className="w-full pl-9 pr-4 py-3 border-3 border-[#2C2416] bg-[#F5F1E8] font-medium text-[#2C2416] focus:outline-none focus:ring-2 focus:ring-[#F5C542] appearance-none cursor-pointer"
                         >
-                            <option value="all">All Categories</option>
                             {categories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
+                                <option key={cat} value={cat}>
+                                    {cat === 'all' ? 'All Categories' : cat}
+                                </option>
                             ))}
                         </select>
                     </div>

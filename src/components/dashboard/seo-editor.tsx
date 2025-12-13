@@ -295,8 +295,16 @@ export function SEOEditor({ seo, onChange, autoData, type }: SEOEditorProps) {
     
     // Add secondary keyword
     const addSecondaryKeyword = useCallback(() => {
-        if (keywordInput && !seo.secondaryKeywords?.includes(keywordInput)) {
-            updateSEO('secondaryKeywords', [...(seo.secondaryKeywords || []), keywordInput]);
+        if (!keywordInput.trim()) return;
+        
+        // Split by comma for multiple keywords
+        const keywords = keywordInput
+            .split(',')
+            .map(k => k.trim())
+            .filter(k => k && !seo.secondaryKeywords?.includes(k));
+        
+        if (keywords.length > 0) {
+            updateSEO('secondaryKeywords', [...(seo.secondaryKeywords || []), ...keywords]);
             setKeywordInput('');
         }
     }, [keywordInput, seo.secondaryKeywords, updateSEO]);
@@ -482,13 +490,16 @@ export function SEOEditor({ seo, onChange, autoData, type }: SEOEditorProps) {
                     {/* Secondary Keywords */}
                     <div>
                         <Label>Secondary Keywords / LSI Keywords</Label>
+                        <p className="text-xs text-[#2C2416]/60 mt-1 mb-2">
+                            💡 Tip: Use commas to add multiple keywords at once (e.g., "react, nextjs, typescript")
+                        </p>
                         <div className="flex gap-2 mt-2">
                             <input
                                 type="text"
                                 value={keywordInput}
                                 onChange={(e) => setKeywordInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSecondaryKeyword())}
-                                placeholder="Add related terms..."
+                                placeholder="Add keywords (comma-separated)..."
                                 className="flex-1 px-4 py-2 border-4 border-[#2C2416] bg-[#F5F1E8] focus:outline-none"
                             />
                             <button

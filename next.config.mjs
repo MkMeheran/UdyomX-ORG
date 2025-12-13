@@ -22,8 +22,17 @@ const nextConfig = {
       'lucide-react',
       '@radix-ui/react-icons',
       'framer-motion',
-      '@supabase/supabase-js',
     ],
+  },
+  // Fix Supabase bundling issues
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+      });
+    }
+    return config;
   },
   // Reduce module resolution time
   modularizeImports: {

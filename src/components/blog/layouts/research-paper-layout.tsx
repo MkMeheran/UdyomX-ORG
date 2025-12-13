@@ -10,6 +10,7 @@ import { DownloadSection } from '../download-section';
 import { RecommendedContent } from '../recommended-content';
 import { useTOC } from '@/hooks/use-toc';
 import { ContentRenderer } from '@/components/common/ContentRenderer';
+import { MediaLightbox } from '@/components/common/MediaLightbox';
 
 interface ResearchPaperLayoutProps {
     post: BlogPost;
@@ -150,6 +151,9 @@ export function ResearchPaperLayout({ post, userIsPremium = false }: ResearchPap
                     </aside>
                 </div>
             </div>
+
+            {/* Media Lightbox */}
+            <MediaLightbox trigger=".lightbox-trigger" />
         </div>
     );
 }

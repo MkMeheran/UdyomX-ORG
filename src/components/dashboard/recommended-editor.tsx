@@ -118,7 +118,7 @@ export function RecommendedEditor({
     
     // Fetch content preview when slug changes
     const fetchPreview = useCallback(async () => {
-        if (!slug) {
+        if (!slug || slug.length < 3) {
             setPreview(null);
             setError(null);
             return;
@@ -133,8 +133,12 @@ export function RecommendedEditor({
                 setPreview(content);
                 setError(null);
             } else {
-                setPreview(null);
-                setError(`No ${selectedType} found with slug "${slug}"`);
+                // Only show error if slug is long enough and not matching any suggestion
+                const isValidSlug = allSlugs.some(s => s.slug === slug && s.type === selectedType);
+                if (!isValidSlug && slug.length >= 3) {
+                    setPreview(null);
+                    setError(`No ${selectedType} found with slug "${slug}"`);
+                }
             }
         } catch {
             setError('Failed to fetch content');
@@ -142,7 +146,7 @@ export function RecommendedEditor({
         } finally {
             setLoading(false);
         }
-    }, [slug, selectedType]);
+    }, [slug, selectedType, allSlugs]);
     
     // Debounced fetch on slug change
     useEffect(() => {
@@ -403,8 +407,13 @@ export function RecommendedEditor({
                             <button
                                 type="button"
                                 onClick={addItem}
-                                disabled={!preview || loading}
-                                className="px-6 py-2 font-bold border-4 border-[#2C2416] bg-[#F5C542] hover:shadow-[4px_4px_0_rgba(44,36,22,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!preview || loading || !!error}
+                                className={cn(
+                                    "px-6 py-2 font-bold border-4 border-[#2C2416] transition-all",
+                                    preview && !loading && !error
+                                        ? "bg-[#F5C542] hover:shadow-[4px_4px_0_rgba(44,36,22,0.3)] cursor-pointer"
+                                        : "bg-gray-300 cursor-not-allowed opacity-50"
+                                )}
                             >
                                 Add Content
                             </button>
