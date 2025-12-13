@@ -348,7 +348,10 @@ export function RecommendedEditor({
                                         <button
                                             key={s.slug}
                                             type="button"
-                                            onClick={() => setSlug(s.slug)}
+                                            onClick={() => {
+                                                setSlug(s.slug);
+                                                setSuggestions([]);
+                                            }}
                                             className="w-full px-3 py-2 text-left hover:bg-[#F5C542] transition-colors border-b last:border-0 border-[#2C2416]/20"
                                         >
                                             <span className="font-mono text-sm">{s.slug}</span>
