@@ -126,6 +126,11 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
     const [data, setData] = useState<PostEditorData>(() => ({
         ...initialPostData,
         ...initialData,
+        // Only use defaults if initialData doesn't have these values
+        category: initialData?.category || initialPostData.category,
+        author: initialData?.author || initialPostData.author,
+        authorAvatar: initialData?.authorAvatar || initialPostData.authorAvatar,
+        publishDate: initialData?.publishDate || initialPostData.publishDate,
         status: initialData?.status || 'draft',
         visibility: initialData?.visibility || 'public',
         tags: initialData?.tags || [],
@@ -136,6 +141,29 @@ export function PostEditorPage({ postId, initialData }: PostEditorPageProps) {
         toc: initialData?.toc || [],
         seo: initialData?.seo || initialSEOData,
     }));
+    
+    // Update data when initialData changes (for edit mode)
+    useEffect(() => {
+        if (initialData && postId) {
+            setData(prev => ({
+                ...initialPostData,
+                ...initialData,
+                category: initialData?.category || prev.category,
+                author: initialData?.author || prev.author,
+                authorAvatar: initialData?.authorAvatar || prev.authorAvatar,
+                publishDate: initialData?.publishDate || prev.publishDate,
+                status: initialData?.status || prev.status,
+                visibility: initialData?.visibility || prev.visibility,
+                tags: initialData?.tags || prev.tags,
+                gallery: initialData?.gallery || prev.gallery,
+                downloads: initialData?.downloads || prev.downloads,
+                faqs: initialData?.faqs || prev.faqs,
+                recommended: initialData?.recommended || prev.recommended,
+                toc: initialData?.toc || prev.toc,
+                seo: initialData?.seo || prev.seo,
+            }));
+        }
+    }, [initialData, postId]);
     
     const [tagInput, setTagInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);

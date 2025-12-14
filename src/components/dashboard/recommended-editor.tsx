@@ -26,7 +26,7 @@ async function fetchContentBySlug(slug: string, type: 'post' | 'project' | 'serv
 } | null> {
     try {
         const endpoint = type === 'post' ? 'blogs' : type === 'project' ? 'projects' : 'services';
-        const res = await fetch(`/api/${endpoint}/${slug}`);
+        const res = await fetch(`/api/${endpoint}?slug=${slug}`);
         if (!res.ok) return null;
         const data = await res.json();
         
@@ -117,7 +117,7 @@ export function RecommendedEditor({
     }, [slug, selectedType, items, allSlugs]);
     
     // Fetch content preview when slug changes
-    const fetchPreview = useCallback(async () => {
+    const fetchPreview = useCallback(async (immediate = false) => {
         if (!slug || slug.length < 3) {
             setPreview(null);
             setError(null);
@@ -133,12 +133,8 @@ export function RecommendedEditor({
                 setPreview(content);
                 setError(null);
             } else {
-                // Only show error if slug is long enough and not matching any suggestion
-                const isValidSlug = allSlugs.some(s => s.slug === slug && s.type === selectedType);
-                if (!isValidSlug && slug.length >= 3) {
-                    setPreview(null);
-                    setError(`No ${selectedType} found with slug "${slug}"`);
-                }
+                setPreview(null);
+                setError(`No ${selectedType} found with slug "${slug}"`);
             }
         } catch {
             setError('Failed to fetch content');
@@ -146,11 +142,11 @@ export function RecommendedEditor({
         } finally {
             setLoading(false);
         }
-    }, [slug, selectedType, allSlugs]);
+    }, [slug, selectedType]);
     
     // Debounced fetch on slug change
     useEffect(() => {
-        const timer = setTimeout(fetchPreview, 500);
+        const timer = setTimeout(() => fetchPreview(false), 500);
         return () => clearTimeout(timer);
     }, [fetchPreview]);
     
@@ -351,6 +347,8 @@ export function RecommendedEditor({
                                             onClick={() => {
                                                 setSlug(s.slug);
                                                 setSuggestions([]);
+                                                // Immediately fetch preview without debounce
+                                                setTimeout(() => fetchPreview(true), 100);
                                             }}
                                             className="w-full px-3 py-2 text-left hover:bg-[#F5C542] transition-colors border-b last:border-0 border-[#2C2416]/20"
                                         >

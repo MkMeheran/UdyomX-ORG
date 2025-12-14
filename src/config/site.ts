@@ -27,7 +27,7 @@ export const siteConfig = {
 
   // URLs & Links
   urls: {
-    website: "https://udyomxorg-69esaxc6y-mokammel-morsheds-projects.vercel.app/",
+    website: "https://udyomxorg.vercel.app",
     github: "https://github.com/MkMeheran",
     twitter: "https://twitter.com/Meheran_3005", // Update with real Twitter handle
     linkedin: "https://www.linkedin.com/in/mokammel-morshed", // Update with real LinkedIn
